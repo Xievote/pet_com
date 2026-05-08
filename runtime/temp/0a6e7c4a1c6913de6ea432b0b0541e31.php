@@ -1,0 +1,159 @@
+<?php if (!defined('THINK_PATH')) exit(); /*a:1:{s:64:"C:\Users\EDY\tp5\public/../application/index\view\pet\index.html";i:1778211505;}*/ ?>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>宠物生活记录</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header h1 { margin: 0; }
+        .user-info { position: relative; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: #ff9900; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .user-dropdown { position: absolute; top: 50px; right: 0; background: white; border: 1px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 100; display: none; }
+        .user-dropdown.show { display: block; }
+        .user-dropdown a { display: block; padding: 8px 16px; text-decoration: none; color: #333; }
+        .user-dropdown a:hover { background: #f5f5f5; }
+        .form-box { background: #f0f0f0; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+        input, textarea { width: 100%; padding: 10px; margin: 5px 0; box-sizing: border-box; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #ff9900; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
+        button:hover { background: #e68a00; }
+        .log-item { border-bottom: 1px solid #eee; padding: 15px 0; }
+        .time { color: #999; font-size: 12px; }
+        .section { margin-bottom: 40px; }
+        .section h2 { margin-bottom: 20px; }
+        .post-item { border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        .post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .post-author { font-weight: bold; }
+        .post-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+        .post-content { margin-bottom: 15px; line-height: 1.5; }
+        .post-actions { display: flex; gap: 10px; }
+        .comment-section { margin-top: 20px; }
+        .comment-form { margin-bottom: 20px; }
+        .comment-item { border-left: 3px solid #ff9900; padding-left: 15px; margin-bottom: 15px; }
+        .comment-header { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 5px; }
+        .comment-author { font-weight: bold; }
+        .comment-time { color: #999; font-size: 12px; }
+        .load-more { text-align: center; margin: 20px 0; }
+        .load-more button { background: #f5f5f5; color: #333; }
+        .load-more button:hover { background: #e0e0e0; }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .user-info { align-self: flex-end; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 头部区域 -->
+    <div class="header">
+        <h1>🐶 铲屎官记录本</h1>
+        <div class="user-info">
+            <div class="user-avatar" onclick="toggleUserDropdown()">
+                <?php if(session('username')): ?><?php echo substr(\think\Session::get('username'),0,1); else: ?>登<?php endif; ?>
+            </div>
+            <div class="user-dropdown" id="userDropdown">
+                <?php if(session('user_id')): ?>
+                <a href="/profile">个人信息</a>
+                <a href="/logout">退出登录</a>
+                <?php else: ?>
+                <a href="/login">登录</a>
+                <a href="/register">注册</a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 宠物记录表单区域 -->
+    <div class="section">
+        <h2>📝 记录宠物生活</h2>
+        <div class="form-box">
+            <form action="/pet/save" method="post" enctype="multipart/form-data">
+                <input type="text" name="pet_name" placeholder="宠物名字（如：旺财）" required>
+                <textarea name="content" rows="4" placeholder="今天发生了什么？（如：今天拆家了...）" required></textarea>
+                <button type="submit">提交记录</button>
+            </form>
+        </div>
+
+        <hr>
+
+        <!-- 宠物记录列表区域 -->
+        <div class="list-box">
+            <?php if(is_array($logs) || $logs instanceof \think\Collection || $logs instanceof \think\Paginator): $i = 0; $__LIST__ = $logs;if( count($__LIST__)==0 ) : echo "" ;else: foreach($__LIST__ as $key=>$log): $mod = ($i % 2 );++$i;?>
+            <div class="log-item">
+                <h3>🐾 <?php echo $log['pet_name']; ?></h3>
+                <p><?php echo $log['content']; ?></p>
+                <div class="time">记录时间：<?php echo $log['create_time']; ?> | 发布者：<?php echo $log['user']['username']; ?></div>
+            </div>
+            <?php endforeach; endif; else: echo "" ;endif; ?>
+        </div>
+    </div>
+
+    <!-- 发表帖子区域 -->
+    <div class="section">
+        <h2>� 发表帖子</h2>
+        <?php if(session('user_id')): ?>
+        <div class="form-box">
+            <form action="/post/save" method="post">
+                <input type="text" name="title" placeholder="帖子标题" required>
+                <textarea name="content" rows="4" placeholder="帖子内容..." required></textarea>
+                <button type="submit">发布帖子</button>
+            </form>
+        </div>
+        <?php else: ?>
+        <p style="color: #999;">请先<a href="/login">登录</a>后发表帖子</p>
+        <?php endif; ?>
+    </div>
+
+    <!-- 帖子展示区域 -->
+    <div class="section">
+        <h2>📢 社区帖子</h2>
+        <div class="post-list" id="postList">
+            <?php if(is_array($posts) || $posts instanceof \think\Collection || $posts instanceof \think\Paginator): $i = 0; $__LIST__ = $posts;if( count($__LIST__)==0 ) : echo "" ;else: foreach($__LIST__ as $key=>$post): $mod = ($i % 2 );++$i;?>
+            <div class="post-item">
+                <div class="post-header">
+                    <span class="post-author"><?php echo $post['user']['username']; ?></span>
+                    <span class="time"><?php echo $post['created_at']; ?></span>
+                </div>
+                <div class="post-title"><?php echo $post['title']; ?></div>
+                <div class="post-content"><?php echo $post['content']; ?></div>
+                <div class="post-actions">
+                    <button onclick="viewPostDetail(<?php echo $post['id']; ?>)">查看详情</button>
+                </div>
+            </div>
+            <?php endforeach; endif; else: echo "" ;endif; ?>
+        </div>
+    </div>
+
+    <script>
+        // 切换用户下拉菜单
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // 点击其他地方关闭下拉菜单
+        document.addEventListener('click', function(event) {
+            const userInfo = document.querySelector('.user-info');
+            const dropdown = document.getElementById('userDropdown');
+            
+            // 如果点击的是链接，不阻止默认行为，允许跳转
+            if (event.target.tagName === 'A') {
+                dropdown.classList.remove('show');
+                return;
+            }
+
+            if (!userInfo.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // 查看帖子详情
+        function viewPostDetail(postId) {
+            window.location.href = '/post/detail/' + postId;
+        }
+    </script>
+</body>
+</html>
