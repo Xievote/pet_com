@@ -9,13 +9,17 @@ class Pet extends Controller
 {
     protected $method = [];
     // 1. 显示列表页（读取数据）
-    public function index()
+    public function index(Request $request)
     {
-        // 查询所有宠物记录，按时间倒序，关联用户信息
-        $logs = PetLog::with('user')->order('id', 'desc')->select();
+        // 获取页码，默认为1
+        $logPage = $request->param('log_page', 1);
+        $postPage = $request->param('post_page', 1);
         
-        // 查询所有帖子，按时间倒序，关联用户信息
-        $posts = Post::with('user')->order('created_at', 'desc')->select();
+        // 查询宠物记录，按时间倒序，关联用户信息，每页5条
+        $logs = PetLog::with('user')->order('id', 'desc')->paginate(5, false, ['page' => $logPage, 'query' => ['log_page' => $logPage]]);
+        
+        // 查询帖子，按时间倒序，关联用户信息，每页5条
+        $posts = Post::with('user')->order('created_at', 'desc')->paginate(5, false, ['page' => $postPage, 'query' => ['post_page' => $postPage]]);
         
         // 把数据传给视图
         return $this->fetch('index', ['logs' => $logs, 'posts' => $posts]);

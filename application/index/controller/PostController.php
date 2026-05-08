@@ -89,6 +89,22 @@ class PostController extends Controller
         // 关联用户ID
         $data['user_id'] = session('user_id');
         
+        // 处理图片上传
+        $file = $request->file('image');
+        if ($file) {
+            // 验证图片格式和大小
+            $info = $file->validate([
+                'size' => 2097152, // 2MB
+                'ext' => 'jpg,png,jpeg,gif'
+            ])->move('uploads/posts');
+            
+            if ($info) {
+                $data['image'] = '/uploads/posts/' . $info->getSaveName();
+            } else {
+                $this->error($file->getError());
+            }
+        }
+        
         // 保存帖子
         $post = Post::create($data);
         if ($post) {

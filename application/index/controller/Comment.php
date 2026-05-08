@@ -11,7 +11,7 @@ class Comment extends Controller
     {
         // 检查登录状态
         if (!session('user_id')) {
-            $this->redirect('UserLogin/login');
+            $this->redirect('login');
         }
         
         // 验证数据
@@ -30,6 +30,22 @@ class Comment extends Controller
         
         // 关联用户ID
         $data['user_id'] = session('user_id');
+        
+        // 处理图片上传
+        $file = $request->file('image');
+        if ($file) {
+            // 验证图片格式和大小
+            $info = $file->validate([
+                'size' => 2097152, // 2MB
+                'ext' => 'jpg,png,jpeg,gif'
+            ])->move('uploads/comments');
+            
+            if ($info) {
+                $data['image'] = '/uploads/comments/' . $info->getSaveName();
+            } else {
+                $this->error($file->getError());
+            }
+        }
         
         // 保存评论
         $comment = CommentModel::create($data);
