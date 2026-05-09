@@ -1,4 +1,4 @@
-<?php if (!defined('THINK_PATH')) exit(); /*a:1:{s:64:"C:\Users\EDY\tp5\public/../application/index\view\pet\index.html";i:1778315244;}*/ ?>
+<?php if (!defined('THINK_PATH')) exit(); /*a:1:{s:64:"C:\Users\EDY\tp5\public/../application/index\view\pet\index.html";i:1778316755;}*/ ?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -84,6 +84,7 @@
             .pagination { flex-wrap: wrap; }
         }
     </style>
+    <script>window.PAGE_CSRF = '<?php echo (isset($csrf_token) && ($csrf_token !== '')?$csrf_token:""); ?>';</script>
 </head>
 <body>
     <!-- 确认弹窗 -->
@@ -99,7 +100,7 @@
 
     <!-- 头部区域 -->
     <div class="header">
-        <h1>🐶 铲屎官记录本</h1>
+        <h1>🐶 铲屎官记录本<?php if(isset($can_moderate_all) && $can_moderate_all): ?> <span style="font-size:14px;color:#c0392b;">(管理)</span><?php endif; ?></h1>
         <div class="user-info">
             <div class="user-avatar" onclick="toggleUserDropdown()">
                 <?php if(session('username')): ?><?php echo substr(\think\Session::get('username'),0,1); else: ?>登<?php endif; ?>
@@ -122,6 +123,7 @@
         <?php if(session('user_id')): ?>
         <div class="form-box">
             <form action="/pet/save" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="<?php echo (isset($csrf_token) && ($csrf_token !== '')?$csrf_token:''); ?>">
                 <input type="text" name="pet_name" placeholder="宠物名字（如：旺财）" required>
                 <textarea name="content" rows="4" placeholder="今天发生了什么？（如：今天拆家了...）" required></textarea>
                 <input type="file" name="image" accept="image/*" onchange="previewImage(this, 'petImagePreview')">
@@ -157,7 +159,7 @@
                 <?php endif; ?>
                 <div class="log-footer">
                     <div class="time"><?php echo $log['create_time']; ?></div>
-                    <?php if(session('user_id') == $log['user_id']): ?>
+                    <?php if(session('user_id') == $log['user_id'] || (isset($can_moderate_all) && $can_moderate_all)): ?>
                     <button class="delete-btn" onclick="deletePetLogItem(<?php echo $log['id']; ?>)">删除</button>
                     <?php endif; ?>
                 </div>
@@ -171,7 +173,7 @@
                 <a href="?log_page=<?php echo $logs['current_page']-1; ?>&post_page=<?php echo $posts['current_page']; ?>">上一页</a>
                 <?php else: ?>
                 <span class="disabled">上一页</span>
-                <?php endif; $__FOR_START_974593374__=1;$__FOR_END_974593374__=$logs['last_page'];for($i=$__FOR_START_974593374__;$i < $__FOR_END_974593374__;$i+=1){ if($i == $logs['current_page']): ?>
+                <?php endif; $__FOR_START_183010162__=1;$__FOR_END_183010162__=$logs['last_page'];for($i=$__FOR_START_183010162__;$i < $__FOR_END_183010162__;$i+=1){ if($i == $logs['current_page']): ?>
                 <span class="active"><?php echo $i; ?></span>
                 <?php else: ?>
                 <a href="?log_page=<?php echo $i; ?>&post_page=<?php echo $posts['current_page']; ?>"><?php echo $i; ?></a>
@@ -193,6 +195,7 @@
         <?php if(session('user_id')): ?>
         <div class="form-box">
             <form action="/post/save" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="<?php echo (isset($csrf_token) && ($csrf_token !== '')?$csrf_token:''); ?>">
                 <input type="text" name="title" placeholder="帖子标题" required>
                 <textarea name="content" rows="4" placeholder="帖子内容..." required></textarea>
                 <input type="file" name="image" accept="image/*" onchange="previewImage(this, 'postImagePreview')">
@@ -232,7 +235,7 @@
                 <?php endif; ?>
                 <div class="post-actions">
                     <button onclick="viewPostDetail(<?php echo $post['id']; ?>)">查看详情</button>
-                    <?php if(session('user_id') == $post['user']['id']): ?>
+                    <?php if(session('user_id') == $post['user_id'] || (isset($can_moderate_all) && $can_moderate_all)): ?>
                     <button class="delete-btn" onclick="showDeleteConfirm('post', <?php echo $post['id']; ?>)">删除帖子</button>
                     <?php endif; ?>
                 </div>
@@ -247,7 +250,7 @@
             <a href="?post_page=<?php echo $posts['current_page']-1; ?>&log_page=<?php echo $logs['current_page']; ?>">上一页</a>
             <?php else: ?>
             <span class="disabled">上一页</span>
-            <?php endif; $__FOR_START_1149907548__=1;$__FOR_END_1149907548__=$posts['last_page'];for($i=$__FOR_START_1149907548__;$i < $__FOR_END_1149907548__;$i+=1){ if($i == $posts['current_page']): ?>
+            <?php endif; $__FOR_START_499942467__=1;$__FOR_END_499942467__=$posts['last_page'];for($i=$__FOR_START_499942467__;$i < $__FOR_END_499942467__;$i+=1){ if($i == $posts['current_page']): ?>
             <span class="active"><?php echo $i; ?></span>
             <?php else: ?>
             <a href="?post_page=<?php echo $i; ?>&log_page=<?php echo $logs['current_page']; ?>"><?php echo $i; ?></a>
@@ -319,10 +322,11 @@
 
         // 确认删除
         function confirmDelete() {
+            var tok = encodeURIComponent(window.PAGE_CSRF || '');
             if (deleteType === 'post') {
-                window.location.href = '/post/delete/' + deleteId;
+                window.location.href = '/post/delete/' + deleteId + '?csrf=' + tok;
             } else if (deleteType === 'comment') {
-                window.location.href = '/comment/delete/' + deleteId;
+                window.location.href = '/comment/delete/' + deleteId + '?csrf=' + tok;
             }
             document.getElementById('confirmModal').classList.remove('show');
         }
@@ -356,7 +360,8 @@
                 method: 'DELETE',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Csrf-Token': window.PAGE_CSRF || ''
                 }
             })
             .then(response => {

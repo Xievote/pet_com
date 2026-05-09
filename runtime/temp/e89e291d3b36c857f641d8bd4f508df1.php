@@ -1,0 +1,331 @@
+<?php if (!defined('THINK_PATH')) exit(); /*a:1:{s:66:"C:\Users\EDY\tp5\public/../application/index\view\post\detail.html";i:1778316764;}*/ ?>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>帖子详情</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header h1 { margin: 0; }
+        .back-link { color: #ff9900; text-decoration: none; }
+        .back-link:hover { text-decoration: underline; }
+        .user-info { position: relative; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: #ff9900; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .user-dropdown { position: absolute; top: 50px; right: 0; background: white; border: 1px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 100; display: none; }
+        .user-dropdown.show { display: block; }
+        .user-dropdown a { display: block; padding: 8px 16px; text-decoration: none; color: #333; }
+        .user-dropdown a:hover { background: #f5f5f5; }
+        .post-item { border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 30px; }
+        .post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .post-author-info { display: flex; align-items: center; gap: 12px; }
+        .post-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #ff9900; }
+        .post-avatar-placeholder { width: 50px; height: 50px; border-radius: 50%; background: #ff9900; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; }
+        .post-author { font-weight: bold; }
+        .post-title { font-size: 24px; font-weight: bold; margin-bottom: 15px; }
+        .post-content { line-height: 1.8; margin-bottom: 20px; }
+        .post-image { max-width: 100%; height: auto; border-radius: 4px; margin-bottom: 15px; }
+        .comment-section { margin-top: 40px; }
+        .comment-section h3 { margin-bottom: 20px; }
+        .comment-form { background: #f0f0f0; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+        .comment-form textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px; }
+        .comment-form button { background: #ff9900; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
+        .comment-form button:hover { background: #e68a00; }
+        .comment-item { border-left: 3px solid #ff9900; padding-left: 15px; margin-bottom: 20px; }
+        .comment-header { display: flex; justify-content: space-between; align-items: center; font-size: 14px; margin-bottom: 8px; }
+        .comment-author-info { display: flex; align-items: center; gap: 10px; }
+        .comment-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid #ff9900; }
+        .comment-avatar-placeholder { width: 36px; height: 36px; border-radius: 50%; background: #ff9900; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; }
+        .comment-author { font-weight: bold; }
+        .comment-time { color: #999; font-size: 12px; }
+        .comment-content { line-height: 1.5; }
+        .comment-image { max-width: 150px; height: auto; border-radius: 4px; margin-top: 10px; }
+        .delete-btn { background: #e74c3c !important; }
+        .delete-btn:hover { background: #c0392b !important; }
+        .load-more { text-align: center; margin: 20px 0; }
+        .load-more button { background: #f5f5f5; color: #333; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
+        .load-more button:hover { background: #e0e0e0; }
+        .no-comments { text-align: center; color: #999; padding: 30px; }
+        
+        /* 图片预览 */
+        .image-preview { margin: 10px 0; max-width: 150px; max-height: 150px; display: none; }
+        .image-preview.show { display: block; }
+        
+        /* 弹窗样式 */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; text-align: center; min-width: 300px; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+        .modal-buttons button { padding: 8px 20px; }
+    </style>
+    <script>window.PAGE_CSRF = '<?php echo (isset($csrf_token) && ($csrf_token !== '')?$csrf_token:""); ?>';</script>
+</head>
+<body>
+    <!-- 确认弹窗 -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <p id="modalMessage">确定要删除吗？</p>
+            <div class="modal-buttons">
+                <button onclick="confirmDelete()">确定</button>
+                <button onclick="cancelDelete()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 头部区域 -->
+    <div class="header">
+        <h1>🐶 帖子详情</h1>
+        <div class="user-info">
+            <div class="user-avatar" onclick="toggleUserDropdown()">
+                <?php if(session('username')): ?><?php echo substr(\think\Session::get('username'),0,1); else: ?>登<?php endif; ?>
+            </div>
+            <div class="user-dropdown" id="userDropdown">
+                <?php if(session('user_id')): ?>
+                <a href="/profile">个人信息</a>
+                <a href="/logout">退出登录</a>
+                <?php else: ?>
+                <a href="/login">登录</a>
+                <a href="/register">注册</a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- 返回主页链接 -->
+    <p><a href="<?php echo (isset($back_home) && ($back_home !== '')?$back_home:'/index'); ?>" class="back-link">← 返回主页</a></p>
+
+    <!-- 帖子内容 -->
+    <div class="post-item">
+        <div class="post-header">
+            <div class="post-author-info">
+                <?php if(isset($post['user']['avatar']) && $post['user']['avatar']): ?>
+                <img src="<?php echo $post['user']['avatar']; ?>" alt="<?php echo $post['user']['username']; ?>" class="post-avatar" loading="lazy">
+                <?php else: ?>
+                <div class="post-avatar-placeholder"><?php echo strtoupper(substr($post['user']['username'],0,1)); ?></div>
+                <?php endif; ?>
+                <div>
+                    <div class="post-author"><?php echo $post['user']['username']; ?></div>
+                    <div style="font-size: 12px; color: #999;"><?php echo $post['created_at']; ?></div>
+                </div>
+            </div>
+        </div>
+        <div class="post-title"><?php echo $post['title']; ?></div>
+        <div class="post-content"><?php echo $post['content']; ?></div>
+        <?php if($post['image']): ?>
+        <img src="<?php echo $post['image']; ?>" class="post-image" alt="帖子图片">
+        <?php endif; if(session('user_id') && (session('user_id') == $post['user_id'] || (isset($is_super_moderator) && $is_super_moderator))): ?>
+        <p style="margin-top:16px;">
+            <button type="button" class="delete-btn" style="border:none;padding:10px 16px;border-radius:4px;color:#fff;cursor:pointer;" onclick="showDeleteConfirm('post', <?php echo $post['id']; ?>)">删除帖子</button>
+        </p>
+        <?php endif; ?>
+    </div>
+
+    <!-- 评论区域 -->
+    <div class="comment-section">
+        <h3>💬 评论 (<?php echo $commentCount; ?>)</h3>
+        
+        <!-- 发表评论表单 -->
+        <?php if(session('user_id')): ?>
+        <div class="comment-form">
+            <form action="/comment/save" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="<?php echo (isset($csrf_token) && ($csrf_token !== '')?$csrf_token:''); ?>">
+                <input type="hidden" name="post_id" value="<?php echo $post['id']; ?>">
+                <input type="hidden" name="parent_id" value="0">
+                <textarea name="content" rows="4" placeholder="写下你的评论..." required></textarea>
+                <input type="file" name="image" accept="image/*" onchange="previewImage(this, 'commentImagePreview')">
+                <img id="commentImagePreview" class="image-preview" alt="图片预览">
+                <button type="submit">发表评论</button>
+            </form>
+        </div>
+        <?php else: ?>
+        <p style="color: #999;">请先<a href="/login">登录</a>后发表评论</p>
+        <?php endif; ?>
+
+        <!-- 评论列表 -->
+        <div class="comment-list" id="commentList">
+            <?php if(count($comments) > 0): if(is_array($comments) || $comments instanceof \think\Collection || $comments instanceof \think\Paginator): $i = 0; $__LIST__ = $comments;if( count($__LIST__)==0 ) : echo "" ;else: foreach($__LIST__ as $key=>$comment): $mod = ($i % 2 );++$i;?>
+                <div class="comment-item">
+                    <div class="comment-header">
+                        <div class="comment-author-info">
+                            <?php if(isset($comment['user']['avatar']) && $comment['user']['avatar']): ?>
+                            <img src="<?php echo $comment['user']['avatar']; ?>" alt="<?php echo $comment['user']['username']; ?>" class="comment-avatar" loading="lazy">
+                            <?php else: ?>
+                            <div class="comment-avatar-placeholder"><?php echo strtoupper(substr($comment['user']['username'],0,1)); ?></div>
+                            <?php endif; ?>
+                            <div>
+                                <div class="comment-author"><?php echo $comment['user']['username']; ?></div>
+                                <div class="comment-time"><?php echo $comment['created_at']; ?></div>
+                            </div>
+                        </div>
+                        <?php if(session('user_id') && (session('user_id') == $comment['user_id'] || (isset($is_super_moderator) && $is_super_moderator))): ?>
+                        <button class="delete-btn" onclick="showDeleteConfirm('comment', <?php echo $comment['id']; ?>)">删除</button>
+                        <?php endif; ?>
+                    </div>
+                    <div class="comment-content"><?php echo $comment['content']; ?></div>
+                    <?php if($comment['image']): ?>
+                    <img src="<?php echo $comment['image']; ?>" class="comment-image" alt="评论图片">
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; endif; else: echo "" ;endif; else: ?>
+                <div class="no-comments">暂无评论，快来发表第一条评论吧！</div>
+            <?php endif; ?>
+        </div>
+
+        <?php if(count($comments) >= 10): ?>
+        <div class="load-more">
+            <button onclick="loadMoreComments(<?php echo $post['id']; ?>)">加载更多评论</button>
+        </div>
+        <?php endif; ?>
+    </div>
+
+    <script>
+        // 切换用户下拉菜单
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // 点击其他地方关闭下拉菜单
+        document.addEventListener('click', function(event) {
+            const userInfo = document.querySelector('.user-info');
+            const dropdown = document.getElementById('userDropdown');
+            
+            if (event.target.tagName === 'A') {
+                dropdown.classList.remove('show');
+                return;
+            }
+
+            if (!userInfo.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // 图片预览
+        function previewImage(input, previewId) {
+            const preview = document.getElementById(previewId);
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.add('show');
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.classList.remove('show');
+            }
+        }
+
+        // 删除相关变量
+        let deleteType = '';
+        let deleteId = 0;
+
+        // 显示删除确认弹窗
+        function showDeleteConfirm(type, id) {
+            deleteType = type;
+            deleteId = id;
+            const message = type === 'post' ? '确定要删除这篇帖子吗？' : '确定要删除这条评论吗？';
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('confirmModal').classList.add('show');
+        }
+
+        // 确认删除
+        function confirmDelete() {
+            var tok = encodeURIComponent(window.PAGE_CSRF || '');
+            if (deleteType === 'post') {
+                window.location.href = '/post/delete/' + deleteId + '?csrf=' + tok;
+            } else if (deleteType === 'comment') {
+                window.location.href = '/comment/delete/' + deleteId + '?csrf=' + tok;
+            }
+            document.getElementById('confirmModal').classList.remove('show');
+        }
+
+        // 取消删除
+        function cancelDelete() {
+            document.getElementById('confirmModal').classList.remove('show');
+            deleteType = '';
+            deleteId = 0;
+        }
+
+        // 加载更多评论
+        function loadMoreComments(postId) {
+            const commentList = document.getElementById('commentList');
+            const loadMoreBtn = document.querySelector('.load-more button');
+            
+            loadMoreBtn.innerHTML = '加载中...';
+            
+            setTimeout(() => {
+                commentList.innerHTML += `
+                    <div class="comment-item">
+                        <div class="comment-header">
+                            <div class="comment-author-info">
+                                <div class="comment-avatar-placeholder">测</div>
+                                <div>
+                                    <div class="comment-author">用户测试</div>
+                                    <div class="comment-time">2026-04-23 10:00:00</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="comment-content">这是一条加载的评论</div>
+                    </div>
+                `;
+                loadMoreBtn.innerHTML = '加载更多评论';
+                // 重新初始化懒加载
+                initLazyLoad();
+            }, 500);
+        }
+        
+        // 图片懒加载
+        function initLazyLoad() {
+            // 检查浏览器是否支持 IntersectionObserver
+            if ('IntersectionObserver' in window) {
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            // 添加加载动画
+                            img.style.opacity = '0';
+                            img.style.transition = 'opacity 0.3s ease';
+                            
+                            // 加载图片
+                            const tempImg = new Image();
+                            tempImg.onload = function() {
+                                img.src = tempImg.src;
+                                img.style.opacity = '1';
+                            };
+                            tempImg.onerror = function() {
+                                // 加载失败时显示占位符
+                                img.style.display = 'none';
+                                const placeholder = img.nextElementSibling;
+                                if (placeholder && (placeholder.classList.contains('post-avatar-placeholder') || placeholder.classList.contains('comment-avatar-placeholder'))) {
+                                    placeholder.style.display = 'flex';
+                                }
+                            };
+                            tempImg.src = img.dataset.src || img.src;
+                            
+                            observer.unobserve(img);
+                        }
+                    });
+                }, {
+                    rootMargin: '50px 0px', // 提前50px开始加载
+                    threshold: 0.01
+                });
+                
+                // 观察所有需要懒加载的图片
+                document.querySelectorAll('img[loading="lazy"]').forEach(img => {
+                    imageObserver.observe(img);
+                });
+            } else {
+                // 浏览器不支持 IntersectionObserver，直接加载所有图片
+                document.querySelectorAll('img[loading="lazy"]').forEach(img => {
+                    img.style.opacity = '1';
+                });
+            }
+        }
+        
+        // 页面加载完成后初始化懒加载
+        document.addEventListener('DOMContentLoaded', initLazyLoad);
+    </script>
+</body>
+</html>
