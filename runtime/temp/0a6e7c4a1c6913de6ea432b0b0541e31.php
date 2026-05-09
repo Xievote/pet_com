@@ -1,3 +1,4 @@
+<?php if (!defined('THINK_PATH')) exit(); /*a:1:{s:64:"C:\Users\EDY\tp5\public/../application/index\view\pet\index.html";i:1778315244;}*/ ?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -101,16 +102,16 @@
         <h1>🐶 铲屎官记录本</h1>
         <div class="user-info">
             <div class="user-avatar" onclick="toggleUserDropdown()">
-                {if condition="session('username')"}{$Think.session.username|substr=0,1}{else}登{/if}
+                <?php if(session('username')): ?><?php echo substr(\think\Session::get('username'),0,1); else: ?>登<?php endif; ?>
             </div>
             <div class="user-dropdown" id="userDropdown">
-                {if condition="session('user_id')"}
+                <?php if(session('user_id')): ?>
                 <a href="/profile">个人信息</a>
                 <a href="/logout">退出登录</a>
-                {else}
+                <?php else: ?>
                 <a href="/login">登录</a>
                 <a href="/register">注册</a>
-                {/if}
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -118,7 +119,7 @@
     <!-- 宠物记录表单区域 -->
     <div class="section">
         <h2>📝 记录宠物生活</h2>
-        {if condition="session('user_id')"}
+        <?php if(session('user_id')): ?>
         <div class="form-box">
             <form action="/pet/save" method="post" enctype="multipart/form-data">
                 <input type="text" name="pet_name" placeholder="宠物名字（如：旺财）" required>
@@ -129,73 +130,67 @@
             </form>
         </div>
         
-        {else}
+        <?php else: ?>
         <p style="color: #999;">请先<a href="/login">登录</a>后记录宠物生活</p>
-        {/if}
+        <?php endif; ?>
 
         <hr>
 
         <!-- 宠物记录列表区域 -->
         <div class="list-box" id="petLogList">
-            {volist name="logs" id="log"}
-            <div class="log-item" id="log-item-{$log.id}">
+            <?php if(is_array($logs) || $logs instanceof \think\Collection || $logs instanceof \think\Paginator): $i = 0; $__LIST__ = $logs;if( count($__LIST__)==0 ) : echo "" ;else: foreach($__LIST__ as $key=>$log): $mod = ($i % 2 );++$i;?>
+            <div class="log-item" id="log-item-<?php echo $log['id']; ?>">
                 <div class="log-header">
-                    {if isset($users[$log.user_id]) && isset($users[$log.user_id]['avatar']) && $users[$log.user_id]['avatar']}
-                    <img src="{$users[$log.user_id]['avatar']}" alt="{$users[$log.user_id]['username']}" class="log-avatar" loading="lazy">
-                    {else}
-                    <div class="log-avatar-placeholder">{if isset($users[$log.user_id])}{$users[$log.user_id]['username']|substr=0,1|strtoupper}{else}U{/if}</div>
-                    {/if}
+                    <?php if(isset($users[$log['user_id']]) && isset($users[$log['user_id']]['avatar']) && $users[$log['user_id']]['avatar']): ?>
+                    <img src="<?php echo $users[$log['user_id']]['avatar']; ?>" alt="<?php echo $users[$log['user_id']]['username']; ?>" class="log-avatar" loading="lazy">
+                    <?php else: ?>
+                    <div class="log-avatar-placeholder"><?php if(isset($users[$log['user_id']])): ?><?php echo strtoupper(substr($users[$log['user_id']]['username'],0,1)); else: ?>U<?php endif; ?></div>
+                    <?php endif; ?>
                     <div class="log-meta">
-                        <div class="log-pet-name">🐾 {$log.pet_name}</div>
-                        <div class="log-username">{if isset($users[$log.user_id])}{$users[$log.user_id]['username']}{else}未知用户{/if}</div>
+                        <div class="log-pet-name">🐾 <?php echo $log['pet_name']; ?></div>
+                        <div class="log-username"><?php if(isset($users[$log['user_id']])): ?><?php echo $users[$log['user_id']]['username']; else: ?>未知用户<?php endif; ?></div>
                     </div>
                 </div>
-                <p>{$log.content}</p>
-                {if isset($log['image']) && $log['image']}
-                <img src="{$log['image']}" class="post-image" alt="宠物图片">
-                {/if}
+                <p><?php echo $log['content']; ?></p>
+                <?php if(isset($log['image']) && $log['image']): ?>
+                <img src="<?php echo $log['image']; ?>" class="post-image" alt="宠物图片">
+                <?php endif; ?>
                 <div class="log-footer">
-                    <div class="time">{$log.create_time}</div>
-                    {if session('user_id') == $log.user_id}
-                    <button class="delete-btn" onclick="deletePetLogItem({$log.id})">删除</button>
-                    {/if}
+                    <div class="time"><?php echo $log['create_time']; ?></div>
+                    <?php if(session('user_id') == $log['user_id']): ?>
+                    <button class="delete-btn" onclick="deletePetLogItem(<?php echo $log['id']; ?>)">删除</button>
+                    <?php endif; ?>
                 </div>
             </div>
-            {/volist}
+            <?php endforeach; endif; else: echo "" ;endif; ?>
             
             <!-- 宠物记录分页 -->
-            {if isset($logs['total']) && $logs['total'] > 5}
+            <?php if(isset($logs['total']) && $logs['total'] > 5): ?>
             <div class="pagination">
-                {if $logs['current_page'] > 1}
-                <a href="?log_page={$logs['current_page']-1}&post_page={$posts['current_page']}">上一页</a>
-                {else}
+                <?php if($logs['current_page'] > 1): ?>
+                <a href="?log_page=<?php echo $logs['current_page']-1; ?>&post_page=<?php echo $posts['current_page']; ?>">上一页</a>
+                <?php else: ?>
                 <span class="disabled">上一页</span>
-                {/if}
-                
-                {for start="1" end="$logs['last_page']"}
-                {if $i == $logs['current_page']}
-                <span class="active">{$i}</span>
-                {else}
-                <a href="?log_page={$i}&post_page={$posts['current_page']}">{$i}</a>
-                {/if}
-                {/for}
-                
-                {if $logs['current_page'] < $logs['last_page']}
-                <a href="?log_page={$logs['current_page']+1}&post_page={$posts['current_page']}">下一页</a>
-                {else}
+                <?php endif; $__FOR_START_974593374__=1;$__FOR_END_974593374__=$logs['last_page'];for($i=$__FOR_START_974593374__;$i < $__FOR_END_974593374__;$i+=1){ if($i == $logs['current_page']): ?>
+                <span class="active"><?php echo $i; ?></span>
+                <?php else: ?>
+                <a href="?log_page=<?php echo $i; ?>&post_page=<?php echo $posts['current_page']; ?>"><?php echo $i; ?></a>
+                <?php endif; } if($logs['current_page'] < $logs['last_page']): ?>
+                <a href="?log_page=<?php echo $logs['current_page']+1; ?>&post_page=<?php echo $posts['current_page']; ?>">下一页</a>
+                <?php else: ?>
                 <span class="disabled">下一页</span>
-                {/if}
+                <?php endif; ?>
                 
-                <span>共 {$logs['total']} 条记录</span>
+                <span>共 <?php echo $logs['total']; ?> 条记录</span>
             </div>
-            {/if}
+            <?php endif; ?>
         </div>
     </div>
 
     <!-- 发表帖子区域 -->
     <div class="section">
         <h2>📝 发表帖子</h2>
-        {if condition="session('user_id')"}
+        <?php if(session('user_id')): ?>
         <div class="form-box">
             <form action="/post/save" method="post" enctype="multipart/form-data">
                 <input type="text" name="title" placeholder="帖子标题" required>
@@ -208,69 +203,63 @@
                 <button type="submit">发布帖子</button>
             </form>
         </div>
-        {else}
+        <?php else: ?>
         <p style="color: #999;">请先<a href="/login">登录</a>后发表帖子</p>
-        {/if}
+        <?php endif; ?>
     </div>
 
     <!-- 帖子展示区域 -->
     <div class="section">
         <h2>📢 社区帖子</h2>
         <div class="post-list" id="postList">
-            {volist name="posts" id="post"}
+            <?php if(is_array($posts) || $posts instanceof \think\Collection || $posts instanceof \think\Paginator): $i = 0; $__LIST__ = $posts;if( count($__LIST__)==0 ) : echo "" ;else: foreach($__LIST__ as $key=>$post): $mod = ($i % 2 );++$i;?>
             <div class="post-item">
                 <div class="post-header">
                     <div class="post-author-info">
-                        {if isset($users[$post.user_id]) && isset($users[$post.user_id]['avatar']) && $users[$post.user_id]['avatar']}
-                        <img src="{$users[$post.user_id]['avatar']}" alt="{$users[$post.user_id]['username']}" class="post-avatar" loading="lazy">
-                        {else}
-                        <div class="post-avatar-placeholder">{if isset($users[$post.user_id])}{$users[$post.user_id]['username']|substr=0,1|strtoupper}{else}U{/if}</div>
-                        {/if}
-                        <span class="post-author">{if isset($users[$post.user_id])}{$users[$post.user_id]['username']}{else}未知用户{/if}</span>
+                        <?php if(isset($users[$post['user_id']]) && isset($users[$post['user_id']]['avatar']) && $users[$post['user_id']]['avatar']): ?>
+                        <img src="<?php echo $users[$post['user_id']]['avatar']; ?>" alt="<?php echo $users[$post['user_id']]['username']; ?>" class="post-avatar" loading="lazy">
+                        <?php else: ?>
+                        <div class="post-avatar-placeholder"><?php if(isset($users[$post['user_id']])): ?><?php echo strtoupper(substr($users[$post['user_id']]['username'],0,1)); else: ?>U<?php endif; ?></div>
+                        <?php endif; ?>
+                        <span class="post-author"><?php if(isset($users[$post['user_id']])): ?><?php echo $users[$post['user_id']]['username']; else: ?>未知用户<?php endif; ?></span>
                     </div>
-                    <span class="time">{$post.created_at}</span>
+                    <span class="time"><?php echo $post['created_at']; ?></span>
                 </div>
-                <div class="post-title">{$post.title}</div>
-                <div class="post-content">{$post.content}</div>
-                {if $post.image}
-                <img src="{$post.image}" class="post-image" alt="帖子图片">
-                {/if}
+                <div class="post-title"><?php echo $post['title']; ?></div>
+                <div class="post-content"><?php echo $post['content']; ?></div>
+                <?php if($post['image']): ?>
+                <img src="<?php echo $post['image']; ?>" class="post-image" alt="帖子图片">
+                <?php endif; ?>
                 <div class="post-actions">
-                    <button onclick="viewPostDetail({$post.id})">查看详情</button>
-                    {if session('user_id') == $post.user.id}
-                    <button class="delete-btn" onclick="showDeleteConfirm('post', {$post.id})">删除帖子</button>
-                    {/if}
+                    <button onclick="viewPostDetail(<?php echo $post['id']; ?>)">查看详情</button>
+                    <?php if(session('user_id') == $post['user']['id']): ?>
+                    <button class="delete-btn" onclick="showDeleteConfirm('post', <?php echo $post['id']; ?>)">删除帖子</button>
+                    <?php endif; ?>
                 </div>
             </div>
-            {/volist}
+            <?php endforeach; endif; else: echo "" ;endif; ?>
         </div>
         
         <!-- 帖子分页 -->
-        {if isset($posts['total']) && $posts['total'] > 5}
+        <?php if(isset($posts['total']) && $posts['total'] > 5): ?>
         <div class="pagination">
-            {if $posts['current_page'] > 1}
-            <a href="?post_page={$posts['current_page']-1}&log_page={$logs['current_page']}">上一页</a>
-            {else}
+            <?php if($posts['current_page'] > 1): ?>
+            <a href="?post_page=<?php echo $posts['current_page']-1; ?>&log_page=<?php echo $logs['current_page']; ?>">上一页</a>
+            <?php else: ?>
             <span class="disabled">上一页</span>
-            {/if}
-            
-            {for start="1" end="$posts['last_page']"}
-            {if $i == $posts['current_page']}
-            <span class="active">{$i}</span>
-            {else}
-            <a href="?post_page={$i}&log_page={$logs['current_page']}">{$i}</a>
-            {/if}
-            {/for}
-            
-            {if $posts['current_page'] < $posts['last_page']}
-            <a href="?post_page={$posts['current_page']+1}&log_page={$logs['current_page']}">下一页</a>
-            {else}
+            <?php endif; $__FOR_START_1149907548__=1;$__FOR_END_1149907548__=$posts['last_page'];for($i=$__FOR_START_1149907548__;$i < $__FOR_END_1149907548__;$i+=1){ if($i == $posts['current_page']): ?>
+            <span class="active"><?php echo $i; ?></span>
+            <?php else: ?>
+            <a href="?post_page=<?php echo $i; ?>&log_page=<?php echo $logs['current_page']; ?>"><?php echo $i; ?></a>
+            <?php endif; } if($posts['current_page'] < $posts['last_page']): ?>
+            <a href="?post_page=<?php echo $posts['current_page']+1; ?>&log_page=<?php echo $logs['current_page']; ?>">下一页</a>
+            <?php else: ?>
             <span class="disabled">下一页</span>
-            {/if}
+            <?php endif; ?>
             
-            <span>共 {$posts['total']} 条帖子</span>
+            <span>共 <?php echo $posts['total']; ?> 条帖子</span>
         </div>
-        {/if}
+        <?php endif; ?>
     </div>
 
     <script>

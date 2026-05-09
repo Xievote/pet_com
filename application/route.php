@@ -3,6 +3,7 @@
 use think\Route;
 
 // 主页路由
+Route::get('/', 'index/Pet/index');
 Route::get('/index', 'index/Pet/index');
 
 // 登录路由

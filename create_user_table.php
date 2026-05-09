@@ -13,6 +13,13 @@ try {
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(50) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
+        avatar VARCHAR(255) DEFAULT NULL COMMENT \'头像URL\',
+        bio TEXT NULL COMMENT \'个人简介\',
+        gender VARCHAR(20) DEFAULT \'secret\' COMMENT \'性别\',
+        birthday DATE DEFAULT NULL COMMENT \'生日\',
+        hometown VARCHAR(100) DEFAULT NULL COMMENT \'故乡\',
+        zodiac VARCHAR(32) DEFAULT NULL COMMENT \'星座\',
+        mbti VARCHAR(16) DEFAULT NULL COMMENT \'MBTI\',
         create_time INT DEFAULT 0
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;';
     $pdo->exec($sql);
