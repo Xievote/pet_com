@@ -1,4 +1,4 @@
-<?php if (!defined('THINK_PATH')) exit(); /*a:1:{s:66:"C:\Users\EDY\tp5\public/../application/index\view\pet\profile.html";i:1778315244;}*/ ?>
+<?php if (!defined('THINK_PATH')) exit(); /*a:1:{s:66:"C:\Users\EDY\tp5\public/../application/index\view\pet\profile.html";i:1778319221;}*/ ?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -375,9 +375,7 @@
             .then(data => {
                 if (data.code === 200) {
                     showToast(data.msg || '保存成功');
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
+                    window.location.reload();
                 } else {
                     showToast(data.msg || '保存失败', 'error');
                 }
