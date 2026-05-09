@@ -23,6 +23,12 @@
         button.delete-btn:hover { background: #c0392b; }
         button:disabled { background: #ccc; cursor: not-allowed; }
         .log-item { border-bottom: 1px solid #eee; padding: 15px 0; }
+        .log-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .log-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #ff9900; }
+        .log-avatar-placeholder { width: 40px; height: 40px; border-radius: 50%; background: #ff9900; color: white; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; }
+        .log-meta { flex: 1; }
+        .log-pet-name { font-size: 16px; font-weight: bold; color: #333; }
+        .log-username { font-size: 12px; color: #666; }
         .log-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
         .log-footer .time { color: #999; font-size: 12px; }
         .log-footer .delete-btn { padding: 5px 15px; font-size: 12px; }
@@ -30,6 +36,9 @@
         .section h2 { margin-bottom: 20px; }
         .post-item { border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
         .post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .post-author-info { display: flex; align-items: center; gap: 10px; }
+        .post-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #ff9900; }
+        .post-avatar-placeholder { width: 40px; height: 40px; border-radius: 50%; background: #ff9900; color: white; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; }
         .post-author { font-weight: bold; }
         .post-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
         .post-content { margin-bottom: 15px; line-height: 1.5; }
@@ -130,13 +139,23 @@
         <div class="list-box" id="petLogList">
             {volist name="logs" id="log"}
             <div class="log-item" id="log-item-{$log.id}">
-                <h3>🐾 {$log.pet_name}</h3>
+                <div class="log-header">
+                    {if isset($users[$log.user_id]) && isset($users[$log.user_id]['avatar']) && $users[$log.user_id]['avatar']}
+                    <img src="{$users[$log.user_id]['avatar']}" alt="{$users[$log.user_id]['username']}" class="log-avatar" loading="lazy">
+                    {else}
+                    <div class="log-avatar-placeholder">{if isset($users[$log.user_id])}{$users[$log.user_id]['username']|substr=0,1|upper}{else}U{/if}</div>
+                    {/if}
+                    <div class="log-meta">
+                        <div class="log-pet-name">🐾 {$log.pet_name}</div>
+                        <div class="log-username">{if isset($users[$log.user_id])}{$users[$log.user_id]['username']}{else}未知用户{/if}</div>
+                    </div>
+                </div>
                 <p>{$log.content}</p>
                 {if isset($log['image']) && $log['image']}
                 <img src="{$log['image']}" class="post-image" alt="宠物图片">
                 {/if}
                 <div class="log-footer">
-                    <div class="time">记录时间：{$log.create_time} | 发布者：{$log.user.username}</div>
+                    <div class="time">{$log.create_time}</div>
                     {if session('user_id') == $log.user_id}
                     <button class="delete-btn" onclick="deletePetLogItem({$log.id})">删除</button>
                     {/if}
@@ -201,7 +220,14 @@
             {volist name="posts" id="post"}
             <div class="post-item">
                 <div class="post-header">
-                    <span class="post-author">{$post.user.username}</span>
+                    <div class="post-author-info">
+                        {if isset($users[$post.user_id]) && isset($users[$post.user_id]['avatar']) && $users[$post.user_id]['avatar']}
+                        <img src="{$users[$post.user_id]['avatar']}" alt="{$users[$post.user_id]['username']}" class="post-avatar" loading="lazy">
+                        {else}
+                        <div class="post-avatar-placeholder">{if isset($users[$post.user_id])}{$users[$post.user_id]['username']|substr=0,1|upper}{else}U{/if}</div>
+                        {/if}
+                        <span class="post-author">{if isset($users[$post.user_id])}{$users[$post.user_id]['username']}{else}未知用户{/if}</span>
+                    </div>
                     <span class="time">{$post.created_at}</span>
                 </div>
                 <div class="post-title">{$post.title}</div>
@@ -420,6 +446,57 @@
                 }, 300);
             }, 2000);
         }
+        
+        // 图片懒加载
+        function initLazyLoad() {
+            // 检查浏览器是否支持 IntersectionObserver
+            if ('IntersectionObserver' in window) {
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            // 添加加载动画
+                            img.style.opacity = '0';
+                            img.style.transition = 'opacity 0.3s ease';
+                            
+                            // 加载图片
+                            const tempImg = new Image();
+                            tempImg.onload = function() {
+                                img.src = tempImg.src;
+                                img.style.opacity = '1';
+                            };
+                            tempImg.onerror = function() {
+                                // 加载失败时显示占位符
+                                img.style.display = 'none';
+                                const placeholder = img.nextElementSibling;
+                                if (placeholder && placeholder.classList.contains('log-avatar-placeholder')) {
+                                    placeholder.style.display = 'flex';
+                                }
+                            };
+                            tempImg.src = img.dataset.src || img.src;
+                            
+                            observer.unobserve(img);
+                        }
+                    });
+                }, {
+                    rootMargin: '50px 0px', // 提前50px开始加载
+                    threshold: 0.01
+                });
+                
+                // 观察所有需要懒加载的图片
+                document.querySelectorAll('img[loading="lazy"]').forEach(img => {
+                    imageObserver.observe(img);
+                });
+            } else {
+                // 浏览器不支持 IntersectionObserver，直接加载所有图片
+                document.querySelectorAll('img[loading="lazy"]').forEach(img => {
+                    img.style.opacity = '1';
+                });
+            }
+        }
+        
+        // 页面加载完成后初始化懒加载
+        document.addEventListener('DOMContentLoaded', initLazyLoad);
     </script>
 </body>
 </html>

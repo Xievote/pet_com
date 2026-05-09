@@ -19,6 +19,9 @@
         .user-dropdown a:hover { background: #f5f5f5; }
         .post-item { border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 30px; }
         .post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .post-author-info { display: flex; align-items: center; gap: 12px; }
+        .post-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #ff9900; }
+        .post-avatar-placeholder { width: 50px; height: 50px; border-radius: 50%; background: #ff9900; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; }
         .post-author { font-weight: bold; }
         .post-title { font-size: 24px; font-weight: bold; margin-bottom: 15px; }
         .post-content { line-height: 1.8; margin-bottom: 20px; }
@@ -30,7 +33,10 @@
         .comment-form button { background: #ff9900; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
         .comment-form button:hover { background: #e68a00; }
         .comment-item { border-left: 3px solid #ff9900; padding-left: 15px; margin-bottom: 20px; }
-        .comment-header { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
+        .comment-header { display: flex; justify-content: space-between; align-items: center; font-size: 14px; margin-bottom: 8px; }
+        .comment-author-info { display: flex; align-items: center; gap: 10px; }
+        .comment-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid #ff9900; }
+        .comment-avatar-placeholder { width: 36px; height: 36px; border-radius: 50%; background: #ff9900; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; }
         .comment-author { font-weight: bold; }
         .comment-time { color: #999; font-size: 12px; }
         .comment-content { line-height: 1.5; }
@@ -91,8 +97,17 @@
     <!-- 帖子内容 -->
     <div class="post-item">
         <div class="post-header">
-            <span class="post-author">{$post.user.username}</span>
-            <span class="time">{$post.created_at}</span>
+            <div class="post-author-info">
+                {if isset($post.user.avatar) && $post.user.avatar}
+                <img src="{$post.user.avatar}" alt="{$post.user.username}" class="post-avatar" loading="lazy">
+                {else}
+                <div class="post-avatar-placeholder">{$post.user.username|substr=0,1|upper}</div>
+                {/if}
+                <div>
+                    <div class="post-author">{$post.user.username}</div>
+                    <div style="font-size: 12px; color: #999;">{$post.created_at}</div>
+                </div>
+            </div>
         </div>
         <div class="post-title">{$post.title}</div>
         <div class="post-content">{$post.content}</div>
@@ -127,8 +142,17 @@
                 {volist name="comments" id="comment"}
                 <div class="comment-item">
                     <div class="comment-header">
-                        <span class="comment-author">{$comment.user.username}</span>
-                        <span class="comment-time">{$comment.created_at}</span>
+                        <div class="comment-author-info">
+                            {if isset($comment.user.avatar) && $comment.user.avatar}
+                            <img src="{$comment.user.avatar}" alt="{$comment.user.username}" class="comment-avatar" loading="lazy">
+                            {else}
+                            <div class="comment-avatar-placeholder">{$comment.user.username|substr=0,1|upper}</div>
+                            {/if}
+                            <div>
+                                <div class="comment-author">{$comment.user.username}</div>
+                                <div class="comment-time">{$comment.created_at}</div>
+                            </div>
+                        </div>
                         {if session('user_id') == $comment.user.id}
                         <button class="delete-btn" onclick="showDeleteConfirm('comment', {$comment.id})">删除</button>
                         {/if}
@@ -229,15 +253,73 @@
                 commentList.innerHTML += `
                     <div class="comment-item">
                         <div class="comment-header">
-                            <span class="comment-author">用户测试</span>
-                            <span class="comment-time">2026-04-23 10:00:00</span>
+                            <div class="comment-author-info">
+                                <div class="comment-avatar-placeholder">测</div>
+                                <div>
+                                    <div class="comment-author">用户测试</div>
+                                    <div class="comment-time">2026-04-23 10:00:00</div>
+                                </div>
+                            </div>
                         </div>
                         <div class="comment-content">这是一条加载的评论</div>
                     </div>
                 `;
                 loadMoreBtn.innerHTML = '加载更多评论';
+                // 重新初始化懒加载
+                initLazyLoad();
             }, 500);
         }
+        
+        // 图片懒加载
+        function initLazyLoad() {
+            // 检查浏览器是否支持 IntersectionObserver
+            if ('IntersectionObserver' in window) {
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            // 添加加载动画
+                            img.style.opacity = '0';
+                            img.style.transition = 'opacity 0.3s ease';
+                            
+                            // 加载图片
+                            const tempImg = new Image();
+                            tempImg.onload = function() {
+                                img.src = tempImg.src;
+                                img.style.opacity = '1';
+                            };
+                            tempImg.onerror = function() {
+                                // 加载失败时显示占位符
+                                img.style.display = 'none';
+                                const placeholder = img.nextElementSibling;
+                                if (placeholder && (placeholder.classList.contains('post-avatar-placeholder') || placeholder.classList.contains('comment-avatar-placeholder'))) {
+                                    placeholder.style.display = 'flex';
+                                }
+                            };
+                            tempImg.src = img.dataset.src || img.src;
+                            
+                            observer.unobserve(img);
+                        }
+                    });
+                }, {
+                    rootMargin: '50px 0px', // 提前50px开始加载
+                    threshold: 0.01
+                });
+                
+                // 观察所有需要懒加载的图片
+                document.querySelectorAll('img[loading="lazy"]').forEach(img => {
+                    imageObserver.observe(img);
+                });
+            } else {
+                // 浏览器不支持 IntersectionObserver，直接加载所有图片
+                document.querySelectorAll('img[loading="lazy"]').forEach(img => {
+                    img.style.opacity = '1';
+                });
+            }
+        }
+        
+        // 页面加载完成后初始化懒加载
+        document.addEventListener('DOMContentLoaded', initLazyLoad);
     </script>
 </body>
 </html>

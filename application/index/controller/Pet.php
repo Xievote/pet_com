@@ -15,16 +15,37 @@ class Pet extends Controller
         $logPage = $request->param('log_page', 1);
         $postPage = $request->param('post_page', 1);
         
-        // 查询宠物记录，按时间倒序，关联用户信息，每页5条
-        $logs = PetLog::with('user')->order('id', 'desc')->paginate(5, false, ['page' => $logPage, 'query' => ['log_page' => $logPage]]);
+        // 查询宠物记录，按时间倒序，每页5条
+        $logs = PetLog::order('id', 'desc')->paginate(5, false, ['page' => $logPage, 'query' => ['log_page' => $logPage]]);
         
-        // 查询帖子，按时间倒序，关联用户信息，每页5条
-        $posts = Post::with('user')->order('created_at', 'desc')->paginate(5, false, ['page' => $postPage, 'query' => ['post_page' => $postPage]]);
+        // 查询帖子，按时间倒序，每页5条
+        $posts = Post::order('created_at', 'desc')->paginate(5, false, ['page' => $postPage, 'query' => ['post_page' => $postPage]]);
+        
+        // 获取所有用户ID
+        $userIds = [];
+        foreach ($logs as $log) {
+            $userIds[] = $log['user_id'];
+        }
+        foreach ($posts as $post) {
+            $userIds[] = $post['user_id'];
+        }
+        $userIds = array_unique($userIds);
+        
+        // 查询用户信息
+        $users = [];
+        if (!empty($userIds)) {
+            $userModel = new \app\index\model\User();
+            $userList = $userModel->where('id', 'in', $userIds)->column('username,avatar', 'id');
+            foreach ($userList as $id => $user) {
+                $users[$id] = $user;
+            }
+        }
         
         // 把数据传给视图
         return $this->fetch('index', [
             'logs' => $logs, 
-            'posts' => $posts
+            'posts' => $posts,
+            'users' => $users
         ]);
     }
 

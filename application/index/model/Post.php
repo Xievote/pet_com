@@ -18,7 +18,7 @@ class Post extends Model
     // 关联用户
     public function user()
     {
-        return $this->belongsTo('User', 'user_id', 'id');
+        return $this->belongsTo('app\index\model\User', 'user_id', 'id');
     }
     
     // 关联评论
