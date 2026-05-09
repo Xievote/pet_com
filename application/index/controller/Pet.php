@@ -65,6 +65,15 @@ class Pet extends Controller
         $csrf = bin2hex(random_bytes(16));
         session('csrf_token', $csrf);
 
+        $currentAvatar = '';
+        $uid = session('user_id');
+        if ($uid) {
+            $me = \app\index\model\User::field('avatar')->find($uid);
+            if ($me && !empty(trim((string) $me->avatar))) {
+                $currentAvatar = $me->avatar;
+            }
+        }
+
         return $this->fetch('index', [
             'logs' => $logs,
             'posts' => $posts,
@@ -72,6 +81,7 @@ class Pet extends Controller
             'csrf_token' => $csrf,
             'home_path' => $homePath,
             'can_moderate_all' => $canModerateAll,
+            'current_avatar' => $currentAvatar,
         ]);
     }
 

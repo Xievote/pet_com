@@ -27,78 +27,137 @@ class UserController extends Controller
     // 更新个人信息
     public function updateProfile(Request $request)
     {
-        // 检查登录状态
         if (!session('user_id')) {
             return json(['code' => 401, 'msg' => '请先登录']);
         }
-        
-        // 获取用户信息
+
         $user = UM::find(session('user_id'));
         if (!$user) {
             return json(['code' => 404, 'msg' => '用户不存在']);
         }
-        
-        // 验证数据
+
         $data = $request->only(['username', 'bio', 'gender', 'birthday', 'hometown', 'zodiac', 'mbti']);
-        
-        // 验证用户名
-        if (empty($data['username'])) {
+
+        $username = isset($data['username']) ? trim($data['username']) : '';
+        if ($username === '') {
             return json(['code' => 400, 'msg' => '用户名不能为空']);
         }
-        if (strlen($data['username']) > 50) {
+        if (strlen($username) > 50) {
             return json(['code' => 400, 'msg' => '用户名不能超过50个字符']);
         }
-        
-        // 验证个性描述长度
-        if (!empty($data['bio']) && strlen($data['bio']) > 500) {
+
+        $bioRaw = isset($data['bio']) ? trim((string) $data['bio']) : '';
+        if ($bioRaw !== '' && strlen($bioRaw) > 500) {
             return json(['code' => 400, 'msg' => '个性描述不能超过500个字符']);
         }
-        
-        // 验证故乡长度
-        if (!empty($data['hometown']) && strlen($data['hometown']) > 50) {
+
+        $hometownRaw = isset($data['hometown']) ? trim((string) $data['hometown']) : '';
+        if ($hometownRaw !== '' && strlen($hometownRaw) > 50) {
             return json(['code' => 400, 'msg' => '故乡不能超过50个字符']);
         }
-        
-        // 处理头像上传
+
+        $gender = isset($data['gender']) ? trim((string) $data['gender']) : 'secret';
+        if (!in_array($gender, ['male', 'female', 'secret'], true)) {
+            $gender = 'secret';
+        }
+
+        $birthdayRaw = isset($data['birthday']) ? trim((string) $data['birthday']) : '';
+        $birthdayNew = $birthdayRaw === '' ? null : $birthdayRaw;
+
+        $zodiacRaw = isset($data['zodiac']) ? trim((string) $data['zodiac']) : '';
+        $zodiacNew = $zodiacRaw === '' ? '' : $zodiacRaw;
+
+        $mbtiRaw = isset($data['mbti']) ? trim((string) $data['mbti']) : '';
+        if ($mbtiRaw !== '' && strlen($mbtiRaw) > 16) {
+            return json(['code' => 400, 'msg' => 'MBTI 不能超过16个字符']);
+        }
+        $mbtiNew = $mbtiRaw === '' ? '' : $mbtiRaw;
+
+        $bioStored = htmlspecialchars($bioRaw, ENT_QUOTES, 'UTF-8');
+        $hometownStored = $hometownRaw === '' ? '' : htmlspecialchars($hometownRaw, ENT_QUOTES, 'UTF-8');
+
         $avatarFile = $request->file('avatar_file');
+        $pendingAvatar = false;
         if ($avatarFile) {
-            // 验证图片格式和大小
-            $info = $avatarFile->validate([
-                'size' => 5242880, // 5MB
-                'ext' => 'jpg,png,jpeg'
-            ])->move('uploads/avatars');
-            
-            if ($info) {
-                // 删除旧头像（如果存在）
-                if ($user->avatar && file_exists('.' . $user->avatar)) {
-                    @unlink('.' . $user->avatar);
-                }
-                $user->avatar = '/uploads/avatars/' . $info->getSaveName();
-            } else {
+            if (!$avatarFile->check(['size' => 5242880, 'ext' => 'jpg,png,jpeg'])) {
                 return json(['code' => 400, 'msg' => '头像上传失败：' . $avatarFile->getError()]);
             }
+            $pendingAvatar = true;
         }
-        
-        // 更新用户信息
-        $user->username = $data['username'];
-        if (isset($data['bio'])) $user->bio = htmlspecialchars($data['bio']);
-        if (isset($data['gender'])) $user->gender = $data['gender'];
-        if (isset($data['birthday'])) $user->birthday = $data['birthday'];
-        if (isset($data['hometown'])) $user->hometown = htmlspecialchars($data['hometown']);
-        if (isset($data['zodiac'])) $user->zodiac = $data['zodiac'];
-        if (isset($data['mbti'])) $user->mbti = $data['mbti'];
-        
+
+        $oldBirthdayStr = $this->formatBirthdayForCompare($user->birthday);
+
+        $same = ($user->username === $username)
+            && ((string) ($user->bio ?? '') === $bioStored)
+            && ((string) ($user->gender ?? 'secret') === $gender)
+            && ($oldBirthdayStr === ($birthdayNew === null ? '' : $birthdayNew))
+            && ((string) ($user->hometown ?? '') === $hometownStored)
+            && ((string) ($user->zodiac ?? '') === $zodiacNew)
+            && ((string) ($user->mbti ?? '') === $mbtiNew)
+            && !$pendingAvatar;
+
+        if ($same) {
+            return json([
+                'code' => 200,
+                'msg' => '已更新请不要重复点击',
+                'duplicate_submit' => true,
+            ]);
+        }
+
+        if ($pendingAvatar) {
+            $info = $avatarFile->validate([
+                'size' => 5242880,
+                'ext' => 'jpg,png,jpeg',
+            ])->move('uploads/avatars');
+
+            if (!$info) {
+                return json(['code' => 400, 'msg' => '头像上传失败：' . $avatarFile->getError()]);
+            }
+            if ($user->avatar && file_exists('.' . $user->avatar)) {
+                @unlink('.' . $user->avatar);
+            }
+            $user->avatar = '/uploads/avatars/' . $info->getSaveName();
+        }
+
+        $user->username = $username;
+        $user->bio = $bioStored;
+        $user->gender = $gender;
+        $user->birthday = $birthdayNew;
+        $user->hometown = $hometownStored;
+        $user->zodiac = $zodiacNew;
+        $user->mbti = $mbtiNew;
+
         try {
             if ($user->save()) {
-                // 更新 session 中的用户名
-                session('username', $data['username']);
+                session('username', $username);
                 return json(['code' => 200, 'msg' => '个人信息更新成功']);
-            } else {
-                return json(['code' => 500, 'msg' => '个人信息更新失败']);
             }
+            return json(['code' => 500, 'msg' => '个人信息更新失败']);
         } catch (\Exception $e) {
             return json(['code' => 500, 'msg' => '更新失败：' . $e->getMessage()]);
         }
+    }
+
+    /**
+     * @param mixed $birthday
+     * @return string 空字符串表示未填写
+     */
+    protected function formatBirthdayForCompare($birthday)
+    {
+        if ($birthday === null || $birthday === '') {
+            return '';
+        }
+        if ($birthday instanceof \DateTimeInterface) {
+            return $birthday->format('Y-m-d');
+        }
+        $s = trim((string) $birthday);
+        if ($s === '' || $s === '0000-00-00') {
+            return '';
+        }
+        if (preg_match('/^(\d{4}-\d{2}-\d{2})/', $s, $m)) {
+            return $m[1];
+        }
+        return $s;
     }
     
     // 获取用户头像API（用于懒加载）
