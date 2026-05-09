@@ -256,9 +256,7 @@
             const loadMoreBtn = document.querySelector('.load-more button');
             
             loadMoreBtn.innerHTML = '加载中...';
-            
-            setTimeout(() => {
-                commentList.innerHTML += `
+            commentList.innerHTML += `
                     <div class="comment-item">
                         <div class="comment-header">
                             <div class="comment-author-info">
@@ -272,10 +270,8 @@
                         <div class="comment-content">这是一条加载的评论</div>
                     </div>
                 `;
-                loadMoreBtn.innerHTML = '加载更多评论';
-                // 重新初始化懒加载
-                initLazyLoad();
-            }, 500);
+            loadMoreBtn.innerHTML = '加载更多评论';
+            initLazyLoad();
         }
         
         // 图片懒加载

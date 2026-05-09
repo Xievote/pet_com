@@ -144,9 +144,9 @@ return [
 
     // 视图输出字符串内容替换
     'view_replace_str'       => [],
-    // 默认跳转页面对应的模板文件
-    'dispatch_success_tmpl'  => THINK_PATH . 'tpl' . DS . 'dispatch_jump.tpl',
-    'dispatch_error_tmpl'    => THINK_PATH . 'tpl' . DS . 'dispatch_jump.tpl',
+    // 默认跳转页面对应的模板文件（使用应用内模板，无倒计时，立即跳转）
+    'dispatch_success_tmpl'  => __DIR__ . DS . 'tpl' . DS . 'dispatch_jump.tpl',
+    'dispatch_error_tmpl'    => __DIR__ . DS . 'tpl' . DS . 'dispatch_jump.tpl',
 
     // +----------------------------------------------------------------------
     // | 异常及错误设置
