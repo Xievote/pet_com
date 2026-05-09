@@ -15,6 +15,7 @@ $columns = [
     'hometown' => 'VARCHAR(100) DEFAULT NULL COMMENT \'故乡\'',
     'zodiac' => 'VARCHAR(32) DEFAULT NULL COMMENT \'星座\'',
     'mbti' => 'VARCHAR(16) DEFAULT NULL COMMENT \'MBTI\'',
+    'is_super_admin' => 'TINYINT(1) NOT NULL DEFAULT 0 COMMENT \'1=超级管理员\'',
 ];
 
 try {

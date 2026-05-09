@@ -5,16 +5,15 @@ use think\Request;
 use think\Session;
 use app\index\model\Post;
 use app\index\model\Comment;
+use app\common\SuperAdmin;
 
 class PostController extends Controller
 {
-    // 帖子列表
     public function index()
     {
         try {
-            // 启动 session
             Session::start();
-            
+
             $posts = Post::with('user')->order('created_at desc')->paginate(10);
             $this->assign('posts', $posts);
             return $this->fetch('post/index');
@@ -22,8 +21,7 @@ class PostController extends Controller
             return 'Error: ' . $e->getMessage() . '\n' . $e->getTraceAsString();
         }
     }
-    
-    // 帖子详情
+
     public function detail($id)
     {
         try {
@@ -31,181 +29,179 @@ class PostController extends Controller
             if (!$post) {
                 $this->error('帖子不存在');
             }
-            
-            // 获取评论，支持多层级
+
             $comments = Comment::with('user')->where('post_id', $id)->where('parent_id', 0)->order('created_at desc')->select();
             foreach ($comments as $comment) {
                 $comment->children = Comment::with('user')->where('parent_id', $comment->id)->order('created_at asc')->select();
             }
-            
+
             $commentCount = Comment::where('post_id', $id)->count();
-            
+
+            $uid = session('user_id');
+            $isSuper = SuperAdmin::verifyFromDb($uid);
+            $csrf = bin2hex(random_bytes(16));
+            session('csrf_token', $csrf);
+            $backHome = $isSuper ? '/admin' : '/index';
+
             $this->assign('post', $post);
             $this->assign('comments', $comments);
             $this->assign('commentCount', $commentCount);
+            $this->assign('csrf_token', $csrf);
+            $this->assign('back_home', $backHome);
+            $this->assign('is_super_moderator', $isSuper);
             return $this->fetch('post/detail');
         } catch (\Exception $e) {
             return 'Error: ' . $e->getMessage();
         }
     }
-    
-    // 创建帖子
+
     public function create()
     {
         try {
-            // 检查登录状态
             if (!session('user_id')) {
                 $this->redirect('login');
             }
+            $csrf = bin2hex(random_bytes(16));
+            session('csrf_token', $csrf);
+            $this->assign('csrf_token', $csrf);
             return $this->fetch('post/create');
         } catch (\Exception $e) {
             return 'Error: ' . $e->getMessage();
         }
     }
-    
-    // 保存帖子
+
     public function save(Request $request)
     {
-        // 检查登录状态
         if (!session('user_id')) {
             $this->redirect('login');
         }
-        
-        // 验证数据
+        $posted = $request->post('csrf_token', '');
+        if ($posted === '' || $posted !== session('csrf_token')) {
+            $this->error('请求无效或已过期，请刷新页面后重试');
+        }
+
         $data = $request->only(['title', 'content']);
         $validate = $this->validate($data, [
             'title|标题' => 'require|max:255',
             'content|内容' => 'require',
         ]);
-        
+
         if ($validate !== true) {
             $this->error($validate);
         }
-        
-        // 防XSS攻击
+
         $data['title'] = htmlspecialchars($data['title']);
         $data['content'] = htmlspecialchars($data['content']);
-        
-        // 关联用户ID
         $data['user_id'] = session('user_id');
-        
-        // 处理图片上传
+
         $file = $request->file('image');
         if ($file) {
-            // 验证图片格式和大小
             $info = $file->validate([
-                'size' => 2097152, // 2MB
-                'ext' => 'jpg,png,jpeg,gif'
+                'size' => 2097152,
+                'ext' => 'jpg,png,jpeg,gif',
             ])->move('uploads/posts');
-            
+
             if ($info) {
                 $data['image'] = '/uploads/posts/' . $info->getSaveName();
             } else {
                 $this->error($file->getError());
             }
         }
-        
-        // 保存帖子
+
         $post = Post::create($data);
         if ($post) {
-            $this->success('帖子发布成功', 'post/index');
-        } else {
-            $this->error('帖子发布失败');
+            $target = SuperAdmin::verifyFromDb(session('user_id')) ? '/admin' : 'post/index';
+            $this->success('帖子发布成功', $target);
         }
+        $this->error('帖子发布失败');
     }
-    
-    // 编辑帖子
+
     public function edit($id)
     {
         try {
-            // 检查登录状态
             if (!session('user_id')) {
                 $this->redirect('login');
             }
-            
+
             $post = Post::find($id);
             if (!$post) {
                 $this->error('帖子不存在');
             }
-            
-            // 检查权限
+
             if ($post->user_id != session('user_id')) {
                 $this->error('无权限编辑此帖子');
             }
-            
+
             $this->assign('post', $post);
             return $this->fetch('post/edit');
         } catch (\Exception $e) {
             return 'Error: ' . $e->getMessage();
         }
     }
-    
-    // 更新帖子
+
     public function update(Request $request, $id)
     {
-        // 检查登录状态
         if (!session('user_id')) {
             $this->redirect('login');
         }
-        
+
         $post = Post::find($id);
         if (!$post) {
             $this->error('帖子不存在');
         }
-        
-        // 检查权限
+
         if ($post->user_id != session('user_id')) {
             $this->error('无权限编辑此帖子');
         }
-        
-        // 验证数据
+
         $data = $request->only(['title', 'content']);
         $validate = $this->validate($data, [
             'title|标题' => 'require|max:255',
             'content|内容' => 'require',
         ]);
-        
+
         if ($validate !== true) {
             $this->error($validate);
         }
-        
-        // 防XSS攻击
+
         $data['title'] = htmlspecialchars($data['title']);
         $data['content'] = htmlspecialchars($data['content']);
-        
-        // 更新帖子
+
         $result = $post->save($data);
         if ($result) {
             $this->success('帖子更新成功', 'post/detail?id=' . $id);
-        } else {
-            $this->error('帖子更新失败');
         }
+        $this->error('帖子更新失败');
     }
-    
-    // 删除帖子
+
     public function delete($id)
     {
-        // 检查登录状态
         if (!session('user_id')) {
             $this->redirect('login');
         }
-        
+
+        $t = $this->request->get('csrf', '');
+        if ($t === '' || $t !== session('csrf_token')) {
+            $this->error('请求无效或已过期，请刷新页面后重试');
+        }
+
+        $userId = session('user_id');
+        $isSuper = SuperAdmin::verifyFromDb($userId);
+
         $post = Post::find($id);
         if (!$post) {
             $this->error('帖子不存在');
         }
-        
-        // 检查权限
-        if ($post->user_id != session('user_id')) {
+
+        if (!$isSuper && (int) $post->user_id !== (int) $userId) {
             $this->error('无权限删除此帖子');
         }
-        
-        // 删除帖子（评论会通过外键级联删除）
+
         $result = $post->delete();
         if ($result) {
-            $this->success('帖子删除成功', 'post/index');
-        } else {
-            $this->error('帖子删除失败');
+            $target = $isSuper ? '/admin' : 'post/index';
+            $this->success('帖子删除成功', $target);
         }
+        $this->error('帖子删除失败');
     }
 }

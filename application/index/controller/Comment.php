@@ -3,86 +3,83 @@ namespace app\index\controller;
 use think\Controller;
 use think\Request;
 use app\index\model\Comment as CommentModel;
+use app\common\SuperAdmin;
 
 class Comment extends Controller
 {
-    // 添加评论
     public function save(Request $request)
     {
-        // 检查登录状态
         if (!session('user_id')) {
             $this->redirect('login');
         }
-        
-        // 验证数据
+
+        $posted = $request->post('csrf_token', '');
+        if ($posted === '' || $posted !== session('csrf_token')) {
+            $this->error('请求无效或已过期，请刷新页面后重试');
+        }
+
         $data = $request->only(['post_id', 'content', 'parent_id']);
         $validate = $this->validate($data, [
             'post_id|帖子ID' => 'require|number',
             'content|评论内容' => 'require',
         ]);
-        
+
         if ($validate !== true) {
             $this->error($validate);
         }
-        
-        // 防XSS攻击
+
         $data['content'] = htmlspecialchars($data['content']);
-        
-        // 关联用户ID
         $data['user_id'] = session('user_id');
-        
-        // 处理图片上传
+
         $file = $request->file('image');
         if ($file) {
-            // 验证图片格式和大小
             $info = $file->validate([
-                'size' => 2097152, // 2MB
-                'ext' => 'jpg,png,jpeg,gif'
+                'size' => 2097152,
+                'ext' => 'jpg,png,jpeg,gif',
             ])->move('uploads/comments');
-            
+
             if ($info) {
                 $data['image'] = '/uploads/comments/' . $info->getSaveName();
             } else {
                 $this->error($file->getError());
             }
         }
-        
-        // 保存评论
+
         $comment = CommentModel::create($data);
         if ($comment) {
             $this->success('评论发布成功', 'post/detail?id=' . $data['post_id']);
-        } else {
-            $this->error('评论发布失败');
         }
+        $this->error('评论发布失败');
     }
-    
-    // 删除评论
+
     public function delete($id)
     {
-        // 检查登录状态
         if (!session('user_id')) {
-            $this->redirect('UserLogin/login');
+            $this->redirect('/login');
         }
-        
+
+        $t = $this->request->get('csrf', '');
+        if ($t === '' || $t !== session('csrf_token')) {
+            $this->error('请求无效或已过期，请刷新页面后重试');
+        }
+
+        $userId = session('user_id');
+        $isSuper = SuperAdmin::verifyFromDb($userId);
+
         $comment = CommentModel::find($id);
         if (!$comment) {
             $this->error('评论不存在');
         }
-        
-        // 检查权限
-        if ($comment->user_id != session('user_id')) {
+
+        if (!$isSuper && (int) $comment->user_id !== (int) $userId) {
             $this->error('无权限删除此评论');
         }
-        
-        // 保存帖子ID用于跳转
+
         $post_id = $comment->post_id;
-        
-        // 删除评论（子评论会通过外键级联删除）
         $result = $comment->delete();
         if ($result) {
             $this->success('评论删除成功', 'post/detail?id=' . $post_id);
-        } else {
-            $this->error('评论删除失败');
         }
+        $this->error('评论删除失败');
     }
 }

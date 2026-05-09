@@ -228,8 +228,8 @@ return [
         'domain'    => '',
         //  cookie 启用安全传输
         'secure'    => false,
-        // httponly设置
-        'httponly'  => '',
+        // httponly设置（降低 XSS 窃取 Cookie 风险）
+        'httponly'  => true,
         // 是否使用 setcookie
         'setcookie' => true,
     ],

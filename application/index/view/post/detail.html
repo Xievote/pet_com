@@ -59,6 +59,7 @@
         .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
         .modal-buttons button { padding: 8px 20px; }
     </style>
+    <script>window.PAGE_CSRF = '{$csrf_token|default=""}';</script>
 </head>
 <body>
     <!-- 确认弹窗 -->
@@ -92,7 +93,7 @@
     </div>
 
     <!-- 返回主页链接 -->
-    <p><a href="/index" class="back-link">← 返回主页</a></p>
+    <p><a href="{$back_home|default='/index'}" class="back-link">← 返回主页</a></p>
 
     <!-- 帖子内容 -->
     <div class="post-item">
@@ -114,6 +115,11 @@
         {if $post.image}
         <img src="{$post.image}" class="post-image" alt="帖子图片">
         {/if}
+        {if condition="session('user_id') && (session('user_id') == $post.user_id || (isset($is_super_moderator) && $is_super_moderator))"}
+        <p style="margin-top:16px;">
+            <button type="button" class="delete-btn" style="border:none;padding:10px 16px;border-radius:4px;color:#fff;cursor:pointer;" onclick="showDeleteConfirm('post', {$post.id})">删除帖子</button>
+        </p>
+        {/if}
     </div>
 
     <!-- 评论区域 -->
@@ -124,6 +130,7 @@
         {if condition="session('user_id')"}
         <div class="comment-form">
             <form action="/comment/save" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{$csrf_token|default=''}">
                 <input type="hidden" name="post_id" value="{$post.id}">
                 <input type="hidden" name="parent_id" value="0">
                 <textarea name="content" rows="4" placeholder="写下你的评论..." required></textarea>
@@ -153,7 +160,7 @@
                                 <div class="comment-time">{$comment.created_at}</div>
                             </div>
                         </div>
-                        {if session('user_id') == $comment.user.id}
+                        {if condition="session('user_id') && (session('user_id') == $comment.user_id || (isset($is_super_moderator) && $is_super_moderator))"}
                         <button class="delete-btn" onclick="showDeleteConfirm('comment', {$comment.id})">删除</button>
                         {/if}
                     </div>
@@ -227,10 +234,11 @@
 
         // 确认删除
         function confirmDelete() {
+            var tok = encodeURIComponent(window.PAGE_CSRF || '');
             if (deleteType === 'post') {
-                window.location.href = '/post/delete/' + deleteId;
+                window.location.href = '/post/delete/' + deleteId + '?csrf=' + tok;
             } else if (deleteType === 'comment') {
-                window.location.href = '/comment/delete/' + deleteId;
+                window.location.href = '/comment/delete/' + deleteId + '?csrf=' + tok;
             }
             document.getElementById('confirmModal').classList.remove('show');
         }

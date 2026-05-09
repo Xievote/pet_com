@@ -75,7 +75,8 @@
 <body>
     <div class="container">
         <h1>创建帖子</h1>
-        <form action="{:url('Post/save')}" method="post">
+        <form action="/post/save" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{$csrf_token|default=''}">
             <div class="form-group">
                 <label for="title">标题</label>
                 <input type="text" id="title" name="title" placeholder="请输入帖子标题">
@@ -85,7 +86,7 @@
                 <textarea id="content" name="content" placeholder="请输入帖子内容"></textarea>
             </div>
             <div class="form-actions">
-                <a href="{:url('Post/index')}" class="btn btn-secondary">取消</a>
+                <a href="/post" class="btn btn-secondary">取消</a>
                 <input type="submit" value="发布帖子" class="btn">
             </div>
         </form>

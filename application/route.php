@@ -5,6 +5,8 @@ use think\Route;
 // 主页路由
 Route::get('/', 'index/Pet/index');
 Route::get('/index', 'index/Pet/index');
+// 超级管理员主页（与普通用户数据一致，独立入口）
+Route::get('admin', 'index/Pet/adminIndex');
 
 // 登录路由
 Route::get('login', 'index/Login/login');
