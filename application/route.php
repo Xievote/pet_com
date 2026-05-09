@@ -18,6 +18,7 @@ Route::post('profile', 'index/UserController/updateProfile');
 
 // 宠物记录路由
 Route::post('pet/save', 'index/Pet/save');
+Route::delete('pet/log/:id', 'index/Pet/deleteLog');
 
 // 帖子路由
 Route::get('post/detail/:id', 'index/PostController/detail');

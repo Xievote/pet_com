@@ -23,7 +23,9 @@
         button.delete-btn:hover { background: #c0392b; }
         button:disabled { background: #ccc; cursor: not-allowed; }
         .log-item { border-bottom: 1px solid #eee; padding: 15px 0; }
-        .time { color: #999; font-size: 12px; }
+        .log-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .log-footer .time { color: #999; font-size: 12px; }
+        .log-footer .delete-btn { padding: 5px 15px; font-size: 12px; }
         .section { margin-bottom: 40px; }
         .section h2 { margin-bottom: 20px; }
         .post-item { border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
@@ -107,6 +109,7 @@
     <!-- 宠物记录表单区域 -->
     <div class="section">
         <h2>📝 记录宠物生活</h2>
+        {if condition="session('user_id')"}
         <div class="form-box">
             <form action="/pet/save" method="post" enctype="multipart/form-data">
                 <input type="text" name="pet_name" placeholder="宠物名字（如：旺财）" required>
@@ -116,19 +119,28 @@
                 <button type="submit">提交记录</button>
             </form>
         </div>
+        
+        {else}
+        <p style="color: #999;">请先<a href="/login">登录</a>后记录宠物生活</p>
+        {/if}
 
         <hr>
 
         <!-- 宠物记录列表区域 -->
-        <div class="list-box">
+        <div class="list-box" id="petLogList">
             {volist name="logs" id="log"}
-            <div class="log-item">
+            <div class="log-item" id="log-item-{$log.id}">
                 <h3>🐾 {$log.pet_name}</h3>
                 <p>{$log.content}</p>
                 {if isset($log['image']) && $log['image']}
                 <img src="{$log['image']}" class="post-image" alt="宠物图片">
                 {/if}
-                <div class="time">记录时间：{$log.create_time} | 发布者：{$log.user.username}</div>
+                <div class="log-footer">
+                    <div class="time">记录时间：{$log.create_time} | 发布者：{$log.user.username}</div>
+                    {if session('user_id') == $log.user_id}
+                    <button class="delete-btn" onclick="deletePetLogItem({$log.id})">删除</button>
+                    {/if}
+                </div>
             </div>
             {/volist}
             
@@ -305,6 +317,108 @@
             document.getElementById('confirmModal').classList.remove('show');
             deleteType = '';
             deleteId = 0;
+        }
+
+        // 删除宠物记录项（带确认弹窗和局部更新）
+        function deletePetLogItem(logId) {
+            // 二次确认
+            if (!confirm('⚠️ 警告：删除后无法恢复！\n\n确定要删除这条宠物记录吗？')) {
+                return;
+            }
+            
+            // 获取记录项元素
+            const logItem = document.getElementById('log-item-' + logId);
+            if (!logItem) {
+                alert('记录不存在');
+                return;
+            }
+            
+            // 显示删除中状态
+            logItem.style.opacity = '0.5';
+            
+            // 发送DELETE请求
+            fetch('/pet/log/' + logId, {
+                method: 'DELETE',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('HTTP error! status: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.code === 200) {
+                    // 删除成功，局部更新页面（移除该记录项）
+                    logItem.style.transition = 'all 0.3s ease';
+                    logItem.style.opacity = '0';
+                    logItem.style.transform = 'translateX(-100%)';
+                    
+                    setTimeout(() => {
+                        logItem.remove();
+                        
+                        // 检查是否还有记录
+                        const remainingItems = document.querySelectorAll('.log-item');
+                        if (remainingItems.length === 0) {
+                            // 如果没有记录了，显示空提示
+                            const listBox = document.getElementById('petLogList');
+                            listBox.innerHTML = '<div style="text-align: center; color: #999; padding: 30px;">暂无宠物记录，快来发布第一条吧！</div>';
+                        }
+                    }, 300);
+                    
+                    // 显示成功提示（可选）
+                    showToast(data.msg || '删除成功');
+                } else {
+                    // 删除失败，恢复样式
+                    logItem.style.opacity = '1';
+                    alert(data.msg || '删除失败');
+                }
+            })
+            .catch(error => {
+                // 网络错误或其他异常
+                logItem.style.opacity = '1';
+                console.error('Error:', error);
+                alert('删除失败，请检查网络连接或稍后重试');
+            });
+        }
+        
+        // 显示提示消息
+        function showToast(message) {
+            // 创建提示元素
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #27ae60;
+                color: white;
+                padding: 12px 24px;
+                border-radius: 4px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                z-index: 9999;
+                font-size: 14px;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            // 显示动画
+            setTimeout(() => {
+                toast.style.opacity = '1';
+            }, 10);
+            
+            // 自动隐藏
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 2000);
         }
     </script>
 </body>
