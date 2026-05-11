@@ -1,4 +1,4 @@
-<?php if (!defined('THINK_PATH')) exit(); /*a:1:{s:64:"C:\Users\EDY\tp5\public/../application/index\view\pet\index.html";i:1778316755;}*/ ?>
+<?php if (!defined('THINK_PATH')) exit(); /*a:1:{s:64:"C:\Users\EDY\tp5\public/../application/index\view\pet\index.html";i:1778320037;}*/ ?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -11,7 +11,9 @@
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         .header h1 { margin: 0; }
         .user-info { position: relative; }
-        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: #ff9900; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: #ff9900; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; flex-shrink: 0; }
+        .user-avatar.has-photo { background: transparent; color: transparent; font-size: 0; }
+        .user-avatar.has-photo img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%; border: 2px solid #ff9900; }
         .user-dropdown { position: absolute; top: 50px; right: 0; background: white; border: 1px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 100; display: none; }
         .user-dropdown.show { display: block; }
         .user-dropdown a { display: block; padding: 8px 16px; text-decoration: none; color: #333; }
@@ -102,8 +104,13 @@
     <div class="header">
         <h1>🐶 铲屎官记录本<?php if(isset($can_moderate_all) && $can_moderate_all): ?> <span style="font-size:14px;color:#c0392b;">(管理)</span><?php endif; ?></h1>
         <div class="user-info">
-            <div class="user-avatar" onclick="toggleUserDropdown()">
-                <?php if(session('username')): ?><?php echo substr(\think\Session::get('username'),0,1); else: ?>登<?php endif; ?>
+            <div class="user-avatar<?php if(isset($current_avatar) && $current_avatar): ?> has-photo<?php endif; ?>" onclick="toggleUserDropdown()">
+                <?php if(isset($current_avatar) && $current_avatar): ?>
+                <img src="<?php echo $current_avatar; ?>" alt="" width="40" height="40" loading="eager">
+                <?php else: if(session('username')): ?>
+                <?php echo substr(\think\Session::get('username'),0,1); else: ?>
+                登
+                <?php endif; endif; ?>
             </div>
             <div class="user-dropdown" id="userDropdown">
                 <?php if(session('user_id')): ?>
@@ -173,7 +180,7 @@
                 <a href="?log_page=<?php echo $logs['current_page']-1; ?>&post_page=<?php echo $posts['current_page']; ?>">上一页</a>
                 <?php else: ?>
                 <span class="disabled">上一页</span>
-                <?php endif; $__FOR_START_183010162__=1;$__FOR_END_183010162__=$logs['last_page'];for($i=$__FOR_START_183010162__;$i < $__FOR_END_183010162__;$i+=1){ if($i == $logs['current_page']): ?>
+                <?php endif; $__FOR_START_1083652775__=1;$__FOR_END_1083652775__=$logs['last_page'];for($i=$__FOR_START_1083652775__;$i < $__FOR_END_1083652775__;$i+=1){ if($i == $logs['current_page']): ?>
                 <span class="active"><?php echo $i; ?></span>
                 <?php else: ?>
                 <a href="?log_page=<?php echo $i; ?>&post_page=<?php echo $posts['current_page']; ?>"><?php echo $i; ?></a>
@@ -250,7 +257,7 @@
             <a href="?post_page=<?php echo $posts['current_page']-1; ?>&log_page=<?php echo $logs['current_page']; ?>">上一页</a>
             <?php else: ?>
             <span class="disabled">上一页</span>
-            <?php endif; $__FOR_START_499942467__=1;$__FOR_END_499942467__=$posts['last_page'];for($i=$__FOR_START_499942467__;$i < $__FOR_END_499942467__;$i+=1){ if($i == $posts['current_page']): ?>
+            <?php endif; $__FOR_START_1285035486__=1;$__FOR_END_1285035486__=$posts['last_page'];for($i=$__FOR_START_1285035486__;$i < $__FOR_END_1285035486__;$i+=1){ if($i == $posts['current_page']): ?>
             <span class="active"><?php echo $i; ?></span>
             <?php else: ?>
             <a href="?post_page=<?php echo $i; ?>&log_page=<?php echo $logs['current_page']; ?>"><?php echo $i; ?></a>

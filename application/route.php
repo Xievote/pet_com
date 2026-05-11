@@ -19,6 +19,18 @@ Route::get('logout', 'index/Login/logout');
 Route::get('profile', 'index/UserController/profile');
 Route::post('profile', 'index/UserController/updateProfile');
 
+// 宠物档案路由
+Route::get('pet_profile', 'index/PetProfileController/index');
+Route::get('pet_profile/detail/:id', 'index/PetProfileController/detail');
+Route::post('pet_profile/create', 'index/PetProfileController/create');
+Route::post('pet_profile/update/:id', 'index/PetProfileController/update');
+Route::get('pet_profile/delete/:id', 'index/PetProfileController/delete');
+Route::post('pet_profile/upload_avatar', 'index/PetProfileController/uploadAvatar');
+Route::get('pet_profile/get_list', 'index/PetProfileController/getList');
+Route::get('pet_profile/ranking', 'index/PetProfileController/ranking');
+Route::get('pet_profile/get_ranking/:type', 'index/PetProfileController/getRanking');
+Route::get('pet_profile/charm_details/:id', 'index/PetProfileController/getCharmDetails');
+
 // 宠物记录路由
 Route::post('pet/save', 'index/Pet/save');
 Route::delete('pet/log/:id', 'index/Pet/deleteLog');

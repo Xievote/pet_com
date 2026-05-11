@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>萌宠排行榜</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header h1 { margin: 0; }
+        .back-link { color: #ff9900; text-decoration: none; }
+        .back-link:hover { text-decoration: underline; }
+        
+        .ranking-tabs { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 20px; 
+        }
+        
+        .tab-btn { 
+            padding: 10px 20px; 
+            background: #f0f0f0; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+        }
+        
+        .tab-btn.active { 
+            background: #ff9900; 
+            color: white; 
+        }
+        
+        .tab-btn:hover:not(.active) { 
+            background: #e0e0e0; 
+        }
+        
+        .ranking-list { 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            overflow: hidden; 
+        }
+        
+        .ranking-item { 
+            display: flex; 
+            align-items: center; 
+            padding: 15px 20px; 
+            border-bottom: 1px solid #eee; 
+            transition: background 0.3s; 
+        }
+        
+        .ranking-item:last-child { 
+            border-bottom: none; 
+        }
+        
+        .ranking-item:hover { 
+            background: #f9f9f9; 
+        }
+        
+        .rank-number { 
+            width: 40px; 
+            height: 40px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border-radius: 50%; 
+            font-weight: bold; 
+            margin-right: 15px; 
+        }
+        
+        .rank-number.first { 
+            background: #ffd700; 
+            color: #8b4500; 
+        }
+        
+        .rank-number.second { 
+            background: #c0c0c0; 
+            color: #696969; 
+        }
+        
+        .rank-number.third { 
+            background: #cd7f32; 
+            color: #8b4513; 
+        }
+        
+        .rank-number.other { 
+            background: #f0f0f0; 
+            color: #666; 
+        }
+        
+        .pet-avatar { 
+            width: 60px; 
+            height: 60px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            border: 2px solid #ff9900; 
+            margin-right: 15px; 
+        }
+        
+        .pet-info { 
+            flex: 1; 
+        }
+        
+        .pet-name { 
+            font-size: 18px; 
+            font-weight: bold; 
+            margin-bottom: 5px; 
+        }
+        
+        .pet-stats { 
+            display: flex; 
+            gap: 15px; 
+            color: #666; 
+            font-size: 14px; 
+        }
+        
+        .stat-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 3px; 
+        }
+        
+        .stat-value { 
+            font-weight: bold; 
+            color: #ff9900; 
+        }
+        
+        .charm-score { 
+            font-size: 20px; 
+            font-weight: bold; 
+            color: #ff9900; 
+        }
+        
+        .loading { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(255,255,255,0.8); 
+            z-index: 9998; 
+            justify-content: center; 
+            align-items: center; 
+        }
+        
+        .spinner { 
+            width: 50px; 
+            height: 50px; 
+            border: 4px solid #f3f3f3; 
+            border-top: 4px solid #ff9900; 
+            border-radius: 50%; 
+            animation: spin 1s linear infinite; 
+        }
+        
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        
+        .toast { 
+            position: fixed; 
+            top: 20px; 
+            left: 50%; 
+            transform: translateX(-50%) translateY(-100px); 
+            background: #27ae60; 
+            color: white; 
+            padding: 15px 30px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+            z-index: 9999; 
+            opacity: 0; 
+            transition: all 0.3s ease; 
+        }
+        
+        .toast.show { 
+            transform: translateX(-50%) translateY(0); 
+            opacity: 1; 
+        }
+        
+        .toast.error { 
+            background: #e74c3c; 
+        }
+        
+        .empty-state { 
+            text-align: center; 
+            padding: 40px; 
+            color: #999; 
+        }
+        
+        .section-title { 
+            font-size: 20px; 
+            font-weight: bold; 
+            margin-bottom: 20px; 
+            color: #333; 
+            border-left: 4px solid #ff9900; 
+            padding-left: 10px; 
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast提示 -->
+    <div class="toast" id="toast"></div>
+    
+    <!-- 加载状态 -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+    
+    <!-- 头部 -->
+    <div class="header">
+        <h1>🏆 萌宠排行榜</h1>
+        <a href="/pet_profile" class="back-link">← 返回宠物档案</a>
+    </div>
+    
+    <!-- 排行榜类型切换 -->
+    <div class="ranking-tabs">
+        <button class="tab-btn active" onclick="switchRanking('weekly')">本周排行</button>
+        <button class="tab-btn" onclick="switchRanking('monthly')">本月排行</button>
+        <button class="tab-btn" onclick="switchRanking('daily')">今日排行</button>
+        <button class="tab-btn" onclick="switchRanking('all')">总排行</button>
+    </div>
+    
+    <!-- 排行榜列表 -->
+    <div class="ranking-list" id="rankingList">
+        <!-- 排行榜项将通过JavaScript动态生成 -->
+        <div class="empty-state">正在加载排行榜...</div>
+    </div>
+    
+    <script>
+        let currentType = 'weekly';
+        
+        // 页面加载时获取排行榜
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRanking(currentType);
+        });
+        
+        // 切换排行榜类型
+        function switchRanking(type) {
+            currentType = type;
+            
+            // 更新激活状态
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 加载排行榜
+            loadRanking(type);
+        }
+        
+        // 加载排行榜
+        function loadRanking(type) {
+            showLoading(true);
+            
+            fetch('/pet_profile/get_ranking/' + type, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                showLoading(false);
+                if (data.code === 200) {
+                    renderRanking(data.data);
+                } else {
+                    showToast(data.msg || '加载失败', 'error');
+                    renderEmptyState('加载失败，请稍后重试');
+                }
+            })
+            .catch(error => {
+                showLoading(false);
+                showToast('网络错误，请稍后重试', 'error');
+                console.error('Error:', error);
+                renderEmptyState('网络错误，请稍后重试');
+            });
+        }
+        
+        // 渲染排行榜
+        function renderRanking(rankings) {
+            const container = document.getElementById('rankingList');
+            
+            if (!rankings || rankings.length === 0) {
+                renderEmptyState('暂无数据');
+                return;
+            }
+            
+            let html = '';
+            
+            rankings.forEach((pet, index) => {
+                const rankClass = index === 0 ? 'first' : 
+                                 index === 1 ? 'second' : 
+                                 index === 2 ? 'third' : 'other';
+                const rankNumber = index + 1;
+                
+                html += `
+                    <div class="ranking-item">
+                        <div class="rank-number ${rankClass}">${rankNumber}</div>
+                        ${pet.avatar ? 
+                            `<img src="${pet.avatar}" alt="${pet.name}" class="pet-avatar">` : 
+                            `<div style="width:60px;height:60px;border-radius:50%;background:#ff9900;display:flex;align-items:center;justify-content:center;color:white;font-size:24px;margin-right:15px;">${pet.name.charAt(0)}</div>`
+                        }
+                        <div class="pet-info">
+                            <div class="pet-name">${pet.name}</div>
+                            <div class="pet-stats">
+                                <div class="stat-item">
+                                    <span>📝</span>
+                                    <span class="stat-value">${pet.post_count}</span>
+                                    <span>帖子</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>💬</span>
+                                    <span class="stat-value">${pet.comment_count}</span>
+                                    <span>评论</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span>❤️</span>
+                                    <span class="stat-value">${pet.like_count}</span>
+                                    <span>点赞</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="charm-score">${pet.calculated_charm_score.toFixed(1)}</div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // 渲染空状态
+        function renderEmptyState(message) {
+            const container = document.getElementById('rankingList');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div style="font-size: 48px; margin-bottom: 15px;">🐾</div>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+        
+        // 显示/隐藏加载状态
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            if (show) {
+                loading.style.display = 'flex';
+            } else {
+                loading.style.display = 'none';
+            }
+        }
+        
+        // 显示Toast提示
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + (type === 'error' ? 'error' : '');
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

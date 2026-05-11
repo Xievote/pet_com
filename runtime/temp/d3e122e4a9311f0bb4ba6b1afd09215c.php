@@ -1,4 +1,4 @@
-<?php if (!defined('THINK_PATH')) exit(); /*a:1:{s:66:"C:\Users\EDY\tp5\public/../application/index\view\pet\profile.html";i:1778319221;}*/ ?>
+<?php if (!defined('THINK_PATH')) exit(); /*a:1:{s:66:"C:\Users\EDY\tp5\public/../application/index\view\pet\profile.html";i:1778320119;}*/ ?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -162,11 +162,11 @@
                     
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="birthday">生日</label>
+                            <label for="birthday">生日（可选）</label>
                             <input type="date" id="birthday" name="birthday" value="<?php echo $user['birthday']; ?>">
                         </div>
                         <div class="form-group">
-                            <label for="zodiac">星座</label>
+                            <label for="zodiac">星座（可选）</label>
                             <select id="zodiac" name="zodiac">
                                 <option value="">请选择星座</option>
                                 <option value="aries" <?php if($user['zodiac']=='aries'): ?>selected<?php endif; ?>>♈ 白羊座 (3.21-4.19)</option>
@@ -187,11 +187,11 @@
                     
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="hometown">故乡</label>
-                            <input type="text" id="hometown" name="hometown" value="<?php echo $user['hometown']; ?>" placeholder="请输入您的故乡" maxlength="50">
+                            <label for="hometown">故乡（可选）</label>
+                            <input type="text" id="hometown" name="hometown" value="<?php echo (isset($user['hometown']) && ($user['hometown'] !== '')?$user['hometown']:''); ?>" placeholder="可不填" maxlength="50">
                         </div>
                         <div class="form-group">
-                            <label for="mbti">MBTI性格类型</label>
+                            <label for="mbti">MBTI 性格类型（可选）</label>
                             <select id="mbti" name="mbti">
                                 <option value="">请选择MBTI类型</option>
                                 <option value="INTJ" <?php if($user['mbti']=='INTJ'): ?>selected<?php endif; ?>>INTJ - 建筑师</option>
@@ -219,8 +219,8 @@
                 <div class="form-section">
                     <h3>个性描述</h3>
                     <div class="form-group">
-                        <label for="bio">个人简介（200-500字）</label>
-                        <textarea id="bio" name="bio" maxlength="500" placeholder="介绍一下自己吧..."><?php echo $user['bio']; ?></textarea>
+                        <label for="bio">个人简介（可选，最多500字）</label>
+                        <textarea id="bio" name="bio" maxlength="500" placeholder="可不填"><?php echo (isset($user['bio']) && ($user['bio'] !== '')?$user['bio']:''); ?></textarea>
                         <div class="char-count" id="charCount">0 / 500</div>
                     </div>
                 </div>
@@ -375,7 +375,9 @@
             .then(data => {
                 if (data.code === 200) {
                     showToast(data.msg || '保存成功');
-                    window.location.reload();
+                    if (!data.duplicate_submit) {
+                        window.location.reload();
+                    }
                 } else {
                     showToast(data.msg || '保存失败', 'error');
                 }
