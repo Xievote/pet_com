@@ -1,4 +1,4 @@
-<?php if (!defined('THINK_PATH')) exit(); /*a:1:{s:66:"C:\Users\EDY\tp5\public/../application/index\view\post\detail.html";i:1778316764;}*/ ?>
+<?php if (!defined('THINK_PATH')) exit(); /*a:1:{s:66:"C:\Users\EDY\tp5\public/../application/index\view\post\detail.html";i:1778319218;}*/ ?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -254,9 +254,7 @@
             const loadMoreBtn = document.querySelector('.load-more button');
             
             loadMoreBtn.innerHTML = '加载中...';
-            
-            setTimeout(() => {
-                commentList.innerHTML += `
+            commentList.innerHTML += `
                     <div class="comment-item">
                         <div class="comment-header">
                             <div class="comment-author-info">
@@ -270,10 +268,8 @@
                         <div class="comment-content">这是一条加载的评论</div>
                     </div>
                 `;
-                loadMoreBtn.innerHTML = '加载更多评论';
-                // 重新初始化懒加载
-                initLazyLoad();
-            }, 500);
+            loadMoreBtn.innerHTML = '加载更多评论';
+            initLazyLoad();
         }
         
         // 图片懒加载

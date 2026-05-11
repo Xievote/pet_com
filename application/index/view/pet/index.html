@@ -84,6 +84,26 @@
             .user-info { align-self: flex-end; }
             .pagination { flex-wrap: wrap; }
         }
+        
+        /* 互动按钮样式 */
+        .interaction-bar { display: flex; gap: 15px; margin-top: 10px; }
+        .interaction-btn { display: flex; align-items: center; gap: 4px; padding: 4px 10px; border: 1px solid #eee; border-radius: 15px; background: white; cursor: pointer; font-size: 13px; color: #666; transition: all 0.3s; }
+        .interaction-btn:hover { background: #f9f9f9; border-color: #ddd; }
+        .interaction-btn.active-like { color: #e74c3c; border-color: #e74c3c; background: #fff5f5; }
+        .interaction-btn.active-bookmark { color: #f39c12; border-color: #f39c12; background: #fffdf5; }
+        .interaction-btn .count { font-weight: bold; }
+        
+        /* 礼物弹窗 */
+        .gift-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 2000; }
+        .gift-modal.show { display: flex; }
+        .gift-modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
+        .gift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+        .gift-option { padding: 15px; border: 2px solid #eee; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.3s; }
+        .gift-option:hover { border-color: #ff9900; background: #fff8f0; }
+        .gift-option.selected { border-color: #ff9900; background: #fff8f0; }
+        .gift-option .icon { font-size: 28px; }
+        .gift-option .name { font-size: 14px; font-weight: bold; margin-top: 5px; }
+        .gift-option .price { font-size: 12px; color: #999; margin-top: 3px; }
     </style>
     <script>window.PAGE_CSRF = '{$csrf_token|default=""}';</script>
 </head>
@@ -118,6 +138,7 @@
                 {if condition="session('user_id')"}
                 <a href="/profile">个人信息</a>
                 <a href="/pet_profile">我的宠物档案</a>
+                <a href="/achievement">等级成就</a>
                 <a href="/logout">退出登录</a>
                 {else}
                 <a href="/login">登录</a>
@@ -167,6 +188,12 @@
                 {if isset($log['image']) && $log['image']}
                 <img src="{$log['image']}" class="post-image" alt="宠物图片">
                 {/if}
+                <div class="interaction-bar">
+                    <button class="interaction-btn" onclick="toggleLike('pet_log', {$log.id}, this)" data-liked="false">
+                        <span>❤️</span>
+                        <span class="count">0</span>
+                    </button>
+                </div>
                 <div class="log-footer">
                     <div class="time">{$log.create_time}</div>
                     {if condition="session('user_id') == $log.user_id || (isset($can_moderate_all) && $can_moderate_all)"}
@@ -249,6 +276,18 @@
                 {if $post.image}
                 <img src="{$post.image}" class="post-image" alt="帖子图片">
                 {/if}
+                <div class="interaction-bar">
+                    <button class="interaction-btn" onclick="toggleLike('post', {$post.id}, this)" data-liked="false">
+                        <span>❤️</span>
+                        <span class="count">0</span>
+                    </button>
+                    <button class="interaction-btn" onclick="toggleBookmark('post', {$post.id}, this)" data-bookmarked="false">
+                        <span>⭐</span>
+                    </button>
+                    <button class="interaction-btn" onclick="openGiftModal({$post.user_id}, 'post', {$post.id})">
+                        <span>🎁</span>
+                    </button>
+                </div>
                 <div class="post-actions">
                     <button onclick="viewPostDetail({$post.id})">查看详情</button>
                     {if condition="session('user_id') == $post.user_id || (isset($can_moderate_all) && $can_moderate_all)"}
@@ -513,6 +552,194 @@
         
         // 页面加载完成后初始化懒加载
         document.addEventListener('DOMContentLoaded', initLazyLoad);
+        
+        // ========== 互动功能 ==========
+        
+        // 礼物弹窗状态
+        let giftToUserId = 0;
+        let giftTargetType = '';
+        let giftTargetId = 0;
+        let selectedGiftType = '';
+        
+        // 点赞/取消点赞
+        function toggleLike(targetType, targetId, btn) {
+            var userId = '{$Think.session.user_id|default=""}';
+            if (!userId) {
+                showToast('请先登录');
+                return;
+            }
+            
+            fetch('/interaction/like_toggle', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'target_type=' + targetType + '&target_id=' + targetId
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.code === 200) {
+                    var countEl = btn.querySelector('.count');
+                    if (data.liked) {
+                        btn.classList.add('active-like');
+                        btn.dataset.liked = 'true';
+                    } else {
+                        btn.classList.remove('active-like');
+                        btn.dataset.liked = 'false';
+                    }
+                    if (countEl) {
+                        countEl.textContent = data.count;
+                    }
+                } else {
+                    showToast(data.msg || '操作失败');
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                showToast('网络错误');
+            });
+        }
+        
+        // 收藏/取消收藏
+        function toggleBookmark(targetType, targetId, btn) {
+            var userId = '{$Think.session.user_id|default=""}';
+            if (!userId) {
+                showToast('请先登录');
+                return;
+            }
+            
+            fetch('/interaction/bookmark_toggle', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'target_type=' + targetType + '&target_id=' + targetId + '&folder=默认收藏'
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.code === 200) {
+                    if (data.bookmarked) {
+                        btn.classList.add('active-bookmark');
+                        btn.dataset.bookmarked = 'true';
+                    } else {
+                        btn.classList.remove('active-bookmark');
+                        btn.dataset.bookmarked = 'false';
+                    }
+                    showToast(data.msg);
+                } else {
+                    showToast(data.msg || '操作失败');
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                showToast('网络错误');
+            });
+        }
+        
+        // 打开送礼弹窗
+        function openGiftModal(toUserId, targetType, targetId) {
+            var userId = '{$Think.session.user_id|default=""}';
+            if (!userId) {
+                showToast('请先登录');
+                return;
+            }
+            
+            giftToUserId = toUserId;
+            giftTargetType = targetType;
+            giftTargetId = targetId;
+            selectedGiftType = '';
+            
+            document.getElementById('sendGiftBtn').disabled = true;
+            document.getElementById('giftMessage').value = '';
+            
+            fetch('/interaction/gift_types')
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.code === 200) {
+                        var grid = document.getElementById('giftGrid');
+                        grid.innerHTML = '';
+                        data.data.forEach(function(gift) {
+                            var div = document.createElement('div');
+                            div.className = 'gift-option';
+                            div.onclick = function() { selectGift(gift.type); };
+                            div.innerHTML = '<div class="icon">' + gift.icon + '</div><div class="name">' + gift.name + '</div><div class="price">' + gift.price + ' 积分</div>';
+                            grid.appendChild(div);
+                        });
+                        document.getElementById('giftModal').classList.add('show');
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error:', error);
+                    showToast('加载礼物列表失败');
+                });
+        }
+        
+        // 选择礼物
+        function selectGift(giftType) {
+            selectedGiftType = giftType;
+            document.querySelectorAll('.gift-option').forEach(function(el) {
+                el.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            document.getElementById('sendGiftBtn').disabled = false;
+        }
+        
+        // 关闭送礼弹窗
+        function closeGiftModal() {
+            document.getElementById('giftModal').classList.remove('show');
+        }
+        
+        // 确认送出礼物
+        function confirmSendGift() {
+            if (!selectedGiftType) {
+                showToast('请选择一个礼物');
+                return;
+            }
+            
+            var message = document.getElementById('giftMessage').value;
+            
+            fetch('/interaction/send_gift', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'to_user_id=' + giftToUserId + '&gift_type=' + selectedGiftType + '&message=' + encodeURIComponent(message) + '&target_type=' + giftTargetType + '&target_id=' + giftTargetId
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.code === 200) {
+                    showToast('🎁 礼物已送出！');
+                    closeGiftModal();
+                } else {
+                    showToast(data.msg || '送礼失败');
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                showToast('网络错误');
+            });
+        }
+        
+        // 覆盖 showToast，统一提示风格
+        var originalShowToast = window.showToast || function(msg) {
+            var toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#27ae60;color:white;padding:12px 24px;border-radius:4px;box-shadow:0 2px 10px rgba(0,0,0,0.2);z-index:9999;font-size:14px;opacity:0;transition:opacity 0.3s ease;';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(function() { toast.style.opacity = '1'; }, 10);
+            setTimeout(function() { toast.style.opacity = '0'; setTimeout(function() { toast.remove(); }, 300); }, 2000);
+        };
+        window.showToast = originalShowToast;
     </script>
+
+    <!-- 礼物弹窗 -->
+    <div class="gift-modal" id="giftModal">
+        <div class="gift-modal-content">
+            <h3 style="text-align:center;margin-bottom:15px;">🎁 选择礼物</h3>
+            <div class="gift-grid" id="giftGrid"></div>
+            <div style="margin:10px 0;">
+                <label style="font-weight:bold;">留言（可选）</label>
+                <input type="text" id="giftMessage" placeholder="发送祝福给TA..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-top:5px;">
+            </div>
+            <div style="display:flex;gap:10px;justify-content:center;">
+                <button onclick="closeGiftModal()" style="background:#f0f0f0;color:#333;border:none;padding:10px 25px;border-radius:6px;cursor:pointer;">取消</button>
+                <button onclick="confirmSendGift()" id="sendGiftBtn" style="background:#ff9900;color:white;border:none;padding:10px 25px;border-radius:6px;cursor:pointer;" disabled>确认送出</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

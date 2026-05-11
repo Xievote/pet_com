@@ -212,6 +212,8 @@ return [
         'type'           => '',
         // 是否自动开启 SESSION
         'auto_start'     => true,
+        // session 保存路径
+        'path'           => RUNTIME_PATH . 'session',
     ],
 
     // +----------------------------------------------------------------------

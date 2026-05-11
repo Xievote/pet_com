@@ -5,6 +5,7 @@ use app\index\model\PetLog;
 use app\index\model\Post;
 use think\Request;
 use app\common\SuperAdmin;
+use app\index\service\UserService;
 
 class Pet extends Controller
 {
@@ -123,6 +124,7 @@ class Pet extends Controller
         $petLog->create_time = time();
 
         if ($petLog->save()) {
+            UserService::awardExp($userid, 'pet_log');
             $target = SuperAdmin::verifyFromDb($userid) ? '/admin' : '/index';
             return $this->success('发布成功', $target);
         }

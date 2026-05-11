@@ -6,6 +6,7 @@ use think\Session;
 use app\index\model\Post;
 use app\index\model\Comment;
 use app\common\SuperAdmin;
+use app\index\service\UserService;
 
 class PostController extends Controller
 {
@@ -110,6 +111,7 @@ class PostController extends Controller
 
         $post = Post::create($data);
         if ($post) {
+            UserService::awardExp(session('user_id'), 'post');
             $target = SuperAdmin::verifyFromDb(session('user_id')) ? '/admin' : 'post/index';
             $this->success('帖子发布成功', $target);
         }

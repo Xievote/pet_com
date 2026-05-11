@@ -47,3 +47,18 @@ Route::get('post', 'index/PostController/index');
 // 评论路由
 Route::post('comment/save', 'index/Comment/save');
 Route::get('comment/delete/:id', 'index/Comment/delete');
+
+// 互动引擎路由
+Route::post('interaction/like_toggle', 'index/InteractionController/likeToggle');
+Route::post('interaction/bookmark_toggle', 'index/InteractionController/bookmarkToggle');
+Route::get('interaction/bookmark_list', 'index/InteractionController/bookmarkList');
+Route::post('interaction/send_gift', 'index/InteractionController/sendGift');
+Route::get('interaction/gift_list', 'index/InteractionController/giftList');
+Route::get('interaction/gift_types', 'index/InteractionController/giftTypes');
+
+// 等级成就路由
+Route::get('achievement', 'index/AchievementController/index');
+Route::post('achievement/checkin', 'index/AchievementController/checkin');
+Route::get('achievement/level_info', 'index/AchievementController/getLevelInfo');
+Route::get('achievement/list', 'index/AchievementController/getAchievements');
+Route::post('achievement/check', 'index/AchievementController/checkAchievements');

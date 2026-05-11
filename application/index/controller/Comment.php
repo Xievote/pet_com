@@ -4,6 +4,7 @@ use think\Controller;
 use think\Request;
 use app\index\model\Comment as CommentModel;
 use app\common\SuperAdmin;
+use app\index\service\UserService;
 
 class Comment extends Controller
 {
@@ -47,6 +48,7 @@ class Comment extends Controller
 
         $comment = CommentModel::create($data);
         if ($comment) {
+            UserService::awardExp(session('user_id'), 'comment');
             $this->success('评论发布成功', 'post/detail?id=' . $data['post_id']);
         }
         $this->error('评论发布失败');

@@ -1,0 +1,652 @@
+<?php if (!defined('THINK_PATH')) exit(); /*a:1:{s:72:"C:\Users\EDY\tp5\public/../application/index\view\pet\profile_index.html";i:1778485831;}*/ ?>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>我的宠物档案</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header h1 { margin: 0; }
+        .back-link { color: #ff9900; text-decoration: none; }
+        .back-link:hover { text-decoration: underline; }
+        
+        .pet-profiles-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 30px; 
+        }
+        
+        .pet-card { 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            overflow: hidden; 
+            transition: transform 0.3s; 
+        }
+        
+        .pet-card:hover { 
+            transform: translateY(-5px); 
+        }
+        
+        .pet-cover { 
+            height: 150px; 
+            background: #ff9900; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: white; 
+            font-size: 24px; 
+        }
+        
+        .pet-info { padding: 20px; }
+        
+        .pet-avatar { 
+            width: 80px; 
+            height: 80px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            border: 3px solid #ff9900; 
+            margin: 0 auto 15px; 
+            display: block; 
+        }
+        
+        .pet-name { 
+            text-align: center; 
+            font-size: 20px; 
+            font-weight: bold; 
+            margin-bottom: 10px; 
+        }
+        
+        .pet-stats { 
+            display: flex; 
+            justify-content: space-around; 
+            margin: 15px 0; 
+            color: #666; 
+        }
+        
+        .stat-item { text-align: center; }
+        .stat-value { font-size: 18px; font-weight: bold; color: #ff9900; }
+        
+        .pet-actions { 
+            display: flex; 
+            justify-content: center; 
+            gap: 10px; 
+            margin-top: 15px; 
+        }
+        
+        .btn { 
+            padding: 8px 16px; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            transition: all 0.3s; 
+        }
+        
+        .btn-primary { 
+            background: #ff9900; 
+            color: white; 
+        }
+        
+        .btn-primary:hover { 
+            background: #e68a00; 
+        }
+        
+        .btn-secondary { 
+            background: #f0f0f0; 
+            color: #333; 
+        }
+        
+        .btn-secondary:hover { 
+            background: #e0e0e0; 
+        }
+        
+        .btn-sm { 
+            padding: 4px 12px; 
+            font-size: 12px; 
+        }
+        
+        .add-pet-btn { 
+            display: block; 
+            width: 100%; 
+            padding: 15px; 
+            text-align: center; 
+            background: #f0f0f0; 
+            color: #333; 
+            text-decoration: none; 
+            border-radius: 8px; 
+            margin-bottom: 30px; 
+            transition: background 0.3s; 
+        }
+        
+        .add-pet-btn:hover { 
+            background: #e0e0e0; 
+        }
+        
+        .modal { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.5); 
+            z-index: 1000; 
+            justify-content: center; 
+            align-items: center; 
+        }
+        
+        .modal-content { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 12px; 
+            width: 90%; 
+            max-width: 500px; 
+            max-height: 90vh; 
+            overflow-y: auto; 
+        }
+        
+        .modal-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px; 
+        }
+        
+        .modal-header h3 { 
+            margin: 0; 
+        }
+        
+        .close-btn { 
+            background: none; 
+            border: none; 
+            font-size: 24px; 
+            cursor: pointer; 
+            color: #999; 
+        }
+        
+        .form-group { 
+            margin-bottom: 15px; 
+        }
+        
+        .form-group label { 
+            display: block; 
+            margin-bottom: 5px; 
+            font-weight: bold; 
+        }
+        
+        .form-group input, 
+        .form-group select, 
+        .form-group textarea { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 6px; 
+            font-size: 14px; 
+        }
+        
+        .form-actions { 
+            display: flex; 
+            justify-content: flex-end; 
+            gap: 10px; 
+            margin-top: 20px; 
+        }
+        
+        .toast { 
+            position: fixed; 
+            top: 20px; 
+            left: 50%; 
+            transform: translateX(-50%) translateY(-100px); 
+            background: #27ae60; 
+            color: white; 
+            padding: 15px 30px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+            z-index: 9999; 
+            opacity: 0; 
+            transition: all 0.3s ease; 
+        }
+        
+        .toast.show { 
+            transform: translateX(-50%) translateY(0); 
+            opacity: 1; 
+        }
+        
+        .toast.error { 
+            background: #e74c3c; 
+        }
+        
+        .loading { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(255,255,255,0.8); 
+            z-index: 9998; 
+            justify-content: center; 
+            align-items: center; 
+        }
+        
+        .spinner { 
+            width: 50px; 
+            height: 50px; 
+            border: 4px solid #f3f3f3; 
+            border-top: 4px solid #ff9900; 
+            border-radius: 50%; 
+            animation: spin 1s linear infinite; 
+        }
+        
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        
+        .pet-detail-header { 
+            display: flex; 
+            align-items: center; 
+            gap: 20px; 
+            margin-bottom: 30px; 
+        }
+        
+        .pet-detail-avatar { 
+            width: 120px; 
+            height: 120px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            border: 3px solid #ff9900; 
+        }
+        
+        .pet-detail-info { 
+            flex: 1; 
+        }
+        
+        .pet-detail-name { 
+            font-size: 28px; 
+            font-weight: bold; 
+            margin-bottom: 10px; 
+        }
+        
+        .pet-detail-stats { 
+            display: flex; 
+            gap: 30px; 
+            margin-bottom: 20px; 
+        }
+        
+        .detail-stat { 
+            text-align: center; 
+        }
+        
+        .detail-stat-value { 
+            font-size: 24px; 
+            font-weight: bold; 
+            color: #ff9900; 
+        }
+        
+        .detail-stat-label { 
+            color: #666; 
+            font-size: 14px; 
+        }
+        
+        .pet-detail-description { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            margin-bottom: 30px; 
+        }
+        
+        .section-title { 
+            font-size: 20px; 
+            font-weight: bold; 
+            margin-bottom: 20px; 
+            color: #333; 
+            border-left: 4px solid #ff9900; 
+            padding-left: 10px; 
+        }
+        
+        .photo-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
+            gap: 10px; 
+            margin-bottom: 30px; 
+        }
+        
+        .photo-item { 
+            height: 150px; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            background: #f0f0f0; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: #999; 
+        }
+        
+        .photo-item img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+        
+        .timeline-item { 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            padding: 20px; 
+            margin-bottom: 20px; 
+        }
+        
+        .timeline-header { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            margin-bottom: 15px; 
+        }
+        
+        .timeline-avatar { 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            border: 2px solid #ff9900; 
+        }
+        
+        .timeline-meta { 
+            flex: 1; 
+        }
+        
+        .timeline-pet-name { 
+            font-weight: bold; 
+            color: #333; 
+        }
+        
+        .timeline-time { 
+            color: #999; 
+            font-size: 12px; 
+        }
+        
+        .timeline-content { 
+            margin-bottom: 15px; 
+        }
+        
+        .timeline-image { 
+            max-width: 100%; 
+            border-radius: 8px; 
+            margin-bottom: 15px; 
+        }
+        
+        .pagination { 
+            display: flex; 
+            justify-content: center; 
+            gap: 5px; 
+            margin-top: 20px; 
+        }
+        
+        .pagination a, 
+        .pagination span { 
+            padding: 8px 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            text-decoration: none; 
+            color: #333; 
+        }
+        
+        .pagination a:hover { 
+            background: #f5f5f5; 
+        }
+        
+        .pagination .active { 
+            background: #ff9900; 
+            color: white; 
+            border-color: #ff9900; 
+        }
+        
+        .pagination .disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed; 
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast提示 -->
+    <div class="toast" id="toast"></div>
+    
+    <!-- 加载状态 -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+    
+    <!-- 模态框 -->
+    <div class="modal" id="petModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">创建宠物档案</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="petForm">
+                <input type="hidden" id="petId" name="id">
+                <div class="form-group">
+                    <label for="petName">宠物姓名 *</label>
+                    <input type="text" id="petName" name="name" required maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label for="petBreed">品种</label>
+                    <input type="text" id="petBreed" name="breed" placeholder="例如：英短、金毛">
+                </div>
+                <div class="form-group">
+                    <label for="petBirthday">生日</label>
+                    <input type="date" id="petBirthday" name="birthday">
+                </div>
+                <div class="form-group">
+                    <label>性别</label>
+                    <div>
+                        <label><input type="radio" name="gender" value="male"> 男</label>
+                        <label><input type="radio" name="gender" value="female"> 女</label>
+                        <label><input type="radio" name="gender" value="unknown" checked> 未知</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="petHobbies">爱好</label>
+                    <textarea id="petHobbies" name="hobbies" placeholder="例如：喜欢晒太阳、爱玩逗猫棒" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 头部 -->
+    <div class="header">
+        <h1>🐾 我的宠物档案</h1>
+        <a href="/index" class="back-link">← 返回首页</a>
+    </div>
+    
+    <!-- 添加宠物按钮 -->
+    <a href="#" class="add-pet-btn" onclick="openCreateModal()">➕ 添加新宠物</a>
+    
+    <!-- 排行榜入口 -->
+    <div style="margin-bottom: 30px;">
+        <a href="/pet_profile/ranking" style="display: inline-block; padding: 12px 20px; background: #27ae60; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">🏆 萌宠排行榜</a>
+    </div>
+    
+    <!-- 宠物档案列表 -->
+    <div class="pet-profiles-container" id="petProfilesContainer">
+        <!-- 宠物卡片将通过JavaScript动态生成 -->
+    </div>
+    
+    <script>
+        // 页面加载时获取宠物档案列表
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPetProfiles();
+        });
+        
+        // 加载宠物档案列表
+        function loadPetProfiles() {
+            showLoading(true);
+            
+            fetch('/pet_profile/get_list', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                showLoading(false);
+                if (data.code === 200) {
+                    renderPetProfiles(data.data);
+                } else {
+                    showToast(data.msg || '加载失败', 'error');
+                }
+            })
+            .catch(error => {
+                showLoading(false);
+                showToast('网络错误，请稍后重试', 'error');
+                console.error('Error:', error);
+            });
+        }
+        
+        // 渲染宠物档案列表
+        function renderPetProfiles(petProfiles) {
+            const container = document.getElementById('petProfilesContainer');
+            
+            if (!petProfiles || petProfiles.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #999; padding: 30px; grid-column: 1 / -1;">暂无宠物档案，请添加您的第一只宠物</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            petProfiles.forEach(profile => {
+                const petCard = document.createElement('div');
+                petCard.className = 'pet-card';
+                petCard.innerHTML = `
+                    <div class="pet-cover">
+                        ${profile.cover ? `<img src="${profile.cover}" alt="${profile.name}" style="width:100%;height:100%;object-fit:cover;">` : `<span>🐾</span>`}
+                    </div>
+                    <div class="pet-info">
+                        ${profile.avatar ? `<img src="${profile.avatar}" alt="${profile.name}" class="pet-avatar">` : `<div style="width:80px;height:80px;border-radius:50%;background:#ff9900;display:flex;align-items:center;justify-content:center;color:white;margin:0 auto 15px;font-size:24px;">${profile.name.charAt(0)}</div>`}
+                        <div class="pet-name">${profile.name}</div>
+                        <div class="pet-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">${profile.charm_score.toFixed(1)}</div>
+                                <div>萌力值</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${profile.id}</div>
+                                <div>档案ID</div>
+                            </div>
+                        </div>
+                        <div class="pet-actions">
+                            <button class="btn btn-sm btn-primary" onclick="viewPetDetail(${profile.id})">查看详情</button>
+                            <button class="btn btn-sm btn-secondary" onclick="openEditModal(${JSON.stringify(profile)})">编辑</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(petCard);
+            });
+        }
+        
+        // 查看宠物详情
+        function viewPetDetail(id) {
+            window.location.href = '/pet_profile/detail/' + id;
+        }
+        
+        // 打开创建模态框
+        function openCreateModal() {
+            document.getElementById('modalTitle').textContent = '创建宠物档案';
+            document.getElementById('petId').value = '';
+            document.getElementById('petForm').reset();
+            document.getElementById('petForm').querySelector('input[name="gender"][value="unknown"]').checked = true;
+            document.getElementById('petModal').style.display = 'flex';
+        }
+        
+        // 打开编辑模态框
+        function openEditModal(pet) {
+            document.getElementById('modalTitle').textContent = '编辑宠物档案';
+            document.getElementById('petId').value = pet.id;
+            document.getElementById('petName').value = pet.name;
+            document.getElementById('petBreed').value = pet.breed || '';
+            document.getElementById('petBirthday').value = pet.birthday || '';
+            document.getElementById('petHobbies').value = pet.hobbies || '';
+            
+            // 设置性别选项
+            const genderRadios = document.querySelectorAll('input[name="gender"]');
+            genderRadios.forEach(radio => {
+                radio.checked = radio.value === pet.gender;
+            });
+            
+            document.getElementById('petModal').style.display = 'flex';
+        }
+        
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('petModal').style.display = 'none';
+        }
+        
+        // 表单提交
+        document.getElementById('petForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const petId = document.getElementById('petId').value;
+            
+            const url = petId ? '/pet_profile/update/' + petId : '/pet_profile/create';
+            const method = petId ? 'POST' : 'POST';
+            
+            showLoading(true);
+            
+            fetch(url, {
+                method: method,
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                showLoading(false);
+                if (data.code === 200) {
+                    closeModal();
+                    showToast(data.msg || '操作成功');
+                    loadPetProfiles(); // 重新加载列表
+                } else {
+                    showToast(data.msg || '操作失败', 'error');
+                }
+            })
+            .catch(error => {
+                showLoading(false);
+                showToast('网络错误，请稍后重试', 'error');
+                console.error('Error:', error);
+            });
+        });
+        
+        // 显示/隐藏加载状态
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            if (show) {
+                loading.style.display = 'flex';
+            } else {
+                loading.style.display = 'none';
+            }
+        }
+        
+        // 显示Toast提示
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + (type === 'error' ? 'error' : '');
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
