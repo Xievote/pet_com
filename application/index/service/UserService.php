@@ -82,6 +82,7 @@ class UserService
             $dc->user_id = $userId;
             $dc->checkin_date = $today;
             $dc->exp_awarded = $totalExp;
+            $dc->created_at = date('Y-m-d H:i:s'); // 手动设置正确的时间格式
             $dc->save();
 
             $user->last_checkin_date = $today;

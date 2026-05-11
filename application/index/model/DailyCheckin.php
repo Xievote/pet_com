@@ -7,13 +7,13 @@ class DailyCheckin extends Model
 {
     protected $table = 'daily_checkins';
 
-    protected $autoWriteTimestamp = true;
-    protected $createTime = 'created_at';
-    protected $updateTime = false;
+    // 关闭自动写入时间戳，手动处理
+    protected $autoWriteTimestamp = false;
 
     protected $field = [
         'user_id',
         'checkin_date',
         'exp_awarded',
+        'created_at',
     ];
 }
