@@ -34,6 +34,22 @@ class Pet extends Controller
     }
 
     /**
+     * 创建宠物记录表单页面
+     */
+    public function createLog()
+    {
+        if (!session('user_id')) {
+            $this->redirect('/login');
+        }
+        
+        $csrf = bin2hex(random_bytes(16));
+        session('csrf_token', $csrf);
+        $this->assign('csrf_token', $csrf);
+        
+        return $this->fetch('pet/create_log');
+    }
+
+    /**
      * @param string $homePath 分页与表单所在路径前缀
      * @param bool $canModerateAll 是否可删任意宠物记录/帖子（仍受服务端 DB 校验）
      */

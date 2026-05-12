@@ -6,651 +6,410 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         * { box-sizing: border-box; }
-        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .header h1 { margin: 0; }
-        .user-info { position: relative; }
-        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: #ff9900; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; flex-shrink: 0; }
+        body { font-family: sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #fef9f3 0%, #fff8f0 100%); min-height: 100vh; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 20px; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .header h1 { margin: 0; font-size: 24px; color: #333; }
+        
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .quick-actions { display: flex; gap: 10px; }
+        .quick-btn { display: flex; align-items: center; gap: 6px; padding: 10px 18px; background: linear-gradient(135deg, #ff9900, #ff6600); color: white; border: none; border-radius: 25px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 12px rgba(255,153,0,0.3); }
+        .quick-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,153,0,0.4); }
+        .quick-btn:active { transform: translateY(0); }
+        .quick-btn.secondary { background: linear-gradient(135deg, #3498db, #2980b9); box-shadow: 0 4px 12px rgba(52,152,219,0.3); }
+        .quick-btn.secondary:hover { box-shadow: 0 6px 20px rgba(52,152,219,0.4); }
+        
+        .header-center { display: flex; align-items: center; gap: 15px; }
+        
+        .user-area { display: flex; align-items: center; gap: 12px; }
+        .message-btn { position: relative; width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; font-size: 20px; transition: all 0.3s; box-shadow: 0 4px 12px rgba(231,76,60,0.3); }
+        .message-btn:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(231,76,60,0.4); }
+        .message-badge { position: absolute; top: -4px; right: -4px; background: #e74c3c; color: white; font-size: 11px; padding: 2px 6px; border-radius: 10px; font-weight: bold; min-width: 18px; text-align: center; }
+        
+        .user-avatar-wrapper { position: relative; display: inline-block; }
+        .user-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #ff9900, #ff6600); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; flex-shrink: 0; font-size: 18px; font-weight: bold; transition: all 0.3s; box-shadow: 0 4px 12px rgba(255,153,0,0.3); }
+        .user-avatar:hover { transform: scale(1.05); }
         .user-avatar.has-photo { background: transparent; color: transparent; font-size: 0; }
-        .user-avatar.has-photo img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%; border: 2px solid #ff9900; }
-        .user-dropdown { position: absolute; top: 50px; right: 0; background: white; border: 1px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 100; display: none; }
-        .user-dropdown.show { display: block; }
-        .user-dropdown a { display: block; padding: 8px 16px; text-decoration: none; color: #333; }
-        .user-dropdown a:hover { background: #f5f5f5; }
-        .form-box { background: #f0f0f0; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
-        input, textarea { width: 100%; padding: 10px; margin: 5px 0; box-sizing: border-box; border: 1px solid #ddd; border-radius: 4px; }
-        button { background: #ff9900; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
-        button:hover { background: #e68a00; }
-        button.delete-btn { background: #e74c3c; }
-        button.delete-btn:hover { background: #c0392b; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
-        .log-item { border-bottom: 1px solid #eee; padding: 15px 0; }
-        .log-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .log-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #ff9900; }
-        .log-avatar-placeholder { width: 40px; height: 40px; border-radius: 50%; background: #ff9900; color: white; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; }
-        .log-meta { flex: 1; }
-        .log-pet-name { font-size: 16px; font-weight: bold; color: #333; }
-        .log-username { font-size: 12px; color: #666; }
-        .log-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
-        .log-footer .time { color: #999; font-size: 12px; }
-        .log-footer .delete-btn { padding: 5px 15px; font-size: 12px; }
-        .section { margin-bottom: 40px; }
-        .section h2 { margin-bottom: 20px; }
-        .post-item { border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-        .post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .post-author-info { display: flex; align-items: center; gap: 10px; }
-        .post-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #ff9900; }
-        .post-avatar-placeholder { width: 40px; height: 40px; border-radius: 50%; background: #ff9900; color: white; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; }
-        .post-author { font-weight: bold; }
-        .post-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
-        .post-content { margin-bottom: 15px; line-height: 1.5; }
-        .post-image { max-width: 100%; height: auto; border-radius: 4px; margin-bottom: 10px; }
-        .post-actions { display: flex; gap: 10px; }
-        .comment-section { margin-top: 20px; }
-        .comment-form { margin-bottom: 20px; }
-        .comment-item { border-left: 3px solid #ff9900; padding-left: 15px; margin-bottom: 15px; }
-        .comment-header { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 5px; }
-        .comment-author { font-weight: bold; }
-        .comment-time { color: #999; font-size: 12px; }
-        .load-more { text-align: center; margin: 20px 0; }
-        .load-more button { background: #f5f5f5; color: #333; }
-        .load-more button:hover { background: #e0e0e0; }
+        .user-avatar.has-photo img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 50%; border: 3px solid #ff9900; }
         
-        /* 分页样式 */
-        .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin: 20px 0; }
-        .pagination a, .pagination span { padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; text-decoration: none; color: #333; }
-        .pagination a:hover { background: #f5f5f5; }
-        .pagination .active { background: #ff9900; color: white; border-color: #ff9900; }
-        .pagination .disabled { opacity: 0.5; cursor: not-allowed; }
+        .user-dropdown { position: absolute; top: 100%; right: 0; background: white; border: 1px solid #eee; border-radius: 12px; padding: 10px 0; box-shadow: 0 8px 30px rgba(0,0,0,0.12); z-index: 100; display: none; min-width: 180px; margin-top: 8px; }
+        .user-dropdown.show { display: block; animation: dropdownFadeIn 0.3s ease; }
+        @keyframes dropdownFadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .user-dropdown a { display: flex; align-items: center; gap: 8px; padding: 12px 20px; text-decoration: none; color: #555; font-size: 14px; transition: background 0.2s; }
+        .user-dropdown a:hover { background: #fef9f3; color: #ff9900; }
         
-        /* 图片预览样式 */
-        .image-preview { margin: 10px 0; max-width: 200px; max-height: 200px; display: none; }
-        .image-preview.show { display: block; }
+        .main-content { display: grid; grid-template-columns: 1fr 340px; gap: 24px; }
+        @media (max-width: 800px) { .main-content { grid-template-columns: 1fr; } }
         
-        /* 上传进度 */
-        .upload-progress { height: 10px; background: #eee; border-radius: 5px; margin: 10px 0; overflow: hidden; }
-        .upload-progress-bar { height: 100%; background: #ff9900; width: 0%; transition: width 0.3s; }
+        .section { margin-bottom: 30px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .section h2 { margin: 0; font-size: 20px; color: #333; display: flex; align-items: center; gap: 8px; }
+        .section-badge { background: linear-gradient(135deg, #ff9900, #ff6600); color: white; font-size: 12px; padding: 4px 12px; border-radius: 12px; }
         
-        /* 弹窗样式 */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
-        .modal.show { display: flex; }
-        .modal-content { background: white; padding: 20px; border-radius: 8px; text-align: center; min-width: 300px; }
-        .modal-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
-        .modal-buttons button { padding: 8px 20px; }
+        .square-card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); margin-bottom: 20px; transition: all 0.3s; }
+        .square-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.1); transform: translateY(-2px); }
         
-        @media (max-width: 600px) {
-            body { padding: 10px; }
-            .header { flex-direction: column; align-items: flex-start; gap: 10px; }
-            .user-info { align-self: flex-end; }
-            .pagination { flex-wrap: wrap; }
-        }
+        .pet-record { display: flex; gap: 16px; padding: 20px 0; border-bottom: 1px solid #f0f0f0; }
+        .pet-record:last-child { border-bottom: none; padding-bottom: 0; }
+        .pet-avatar-small { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 3px solid #ff9900; flex-shrink: 0; }
+        .pet-avatar-placeholder { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #ff9900, #ff6600); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; flex-shrink: 0; }
+        .pet-info { flex: 1; min-width: 0; }
+        .pet-name { font-size: 17px; font-weight: bold; color: #333; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .pet-name-icon { color: #ff9900; }
+        .pet-owner { font-size: 13px; color: #888; margin-bottom: 10px; }
+        .pet-content { font-size: 15px; color: #555; line-height: 1.7; margin-bottom: 12px; }
+        .pet-meta { display: flex; gap: 12px; font-size: 13px; color: #999; }
+        .pet-image { width: 100%; max-height: 300px; object-fit: cover; border-radius: 12px; margin-top: 12px; }
         
-        /* 互动按钮样式 */
-        .interaction-bar { display: flex; gap: 15px; margin-top: 10px; }
-        .interaction-btn { display: flex; align-items: center; gap: 4px; padding: 4px 10px; border: 1px solid #eee; border-radius: 15px; background: white; cursor: pointer; font-size: 13px; color: #666; transition: all 0.3s; }
-        .interaction-btn:hover { background: #f9f9f9; border-color: #ddd; }
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #f0f0f0; }
+        .pagination a, .pagination span { padding: 10px 16px; border: 1px solid #ddd; border-radius: 8px; text-decoration: none; color: #555; font-size: 14px; transition: all 0.2s; }
+        .pagination a:hover { background: #fff8f0; border-color: #ff9900; color: #ff9900; }
+        .pagination .active { background: linear-gradient(135deg, #ff9900, #ff6600); color: white; border-color: #ff9900; }
+        .pagination .disabled { opacity: 0.4; cursor: not-allowed; }
+        .pagination .disabled:hover { background: none; border-color: #ddd; color: #555; }
+        
+        .empty-state { text-align: center; padding: 60px 20px; color: #aaa; }
+        .empty-state-icon { font-size: 60px; margin-bottom: 15px; }
+        
+        /* 上传按钮美化 */
+        .upload-label { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; background: linear-gradient(135deg, #3498db, #2980b9); color: white; border-radius: 8px; cursor: pointer; font-size: 14px; transition: all 0.3s; box-shadow: 0 4px 12px rgba(52,152,219,0.3); }
+        .upload-label:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(52,152,219,0.4); }
+        .upload-label:active { transform: translateY(0); }
+        input[type="file"] { display: none; }
+        
+        .delete-btn { background: linear-gradient(135deg, #e74c3c, #c0392b) !important; box-shadow: 0 4px 15px rgba(231,76,60,0.3) !important; }
+        .delete-btn:hover { box-shadow: 0 6px 20px rgba(231,76,60,0.4) !important; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+        
+        .interaction-bar { display: flex; gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid #f5f5f5; }
+        .interaction-btn { display: flex; align-items: center; gap: 5px; padding: 8px 14px; border: 1px solid #eee; border-radius: 20px; background: white; cursor: pointer; font-size: 13px; color: #666; transition: all 0.3s; }
+        .interaction-btn:hover { background: #fef9f3; border-color: #ffd9b3; }
         .interaction-btn.active-like { color: #e74c3c; border-color: #e74c3c; background: #fff5f5; }
         .interaction-btn.active-bookmark { color: #f39c12; border-color: #f39c12; background: #fffdf5; }
         .interaction-btn .count { font-weight: bold; }
         
-        /* 礼物弹窗 */
         .gift-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 2000; }
         .gift-modal.show { display: flex; }
-        .gift-modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
-        .gift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
-        .gift-option { padding: 15px; border: 2px solid #eee; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.3s; }
-        .gift-option:hover { border-color: #ff9900; background: #fff8f0; }
-        .gift-option.selected { border-color: #ff9900; background: #fff8f0; }
-        .gift-option .icon { font-size: 28px; }
-        .gift-option .name { font-size: 14px; font-weight: bold; margin-top: 5px; }
-        .gift-option .price { font-size: 12px; color: #999; margin-top: 3px; }
+        .gift-modal-content { background: white; padding: 28px; border-radius: 16px; width: 90%; max-width: 420px; }
+        .gift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+        .gift-option { padding: 16px; border: 2px solid #eee; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.3s; }
+        .gift-option:hover { border-color: #ff9900; background: #fff8f0; transform: scale(1.02); }
+        .gift-option.selected { border-color: #ff9900; background: linear-gradient(135deg, #fff8f0, #fff0e0); }
+        .gift-option .icon { font-size: 32px; }
+        .gift-option .name { font-size: 14px; font-weight: bold; margin-top: 6px; color: #333; }
+        .gift-option .price { font-size: 12px; color: #999; margin-top: 4px; }
+        
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; padding: 14px 28px; border-radius: 10px; box-shadow: 0 8px 25px rgba(39,174,96,0.4); z-index: 9999; opacity: 0; transition: all 0.4s ease; font-size: 15px; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast.error { background: linear-gradient(135deg, #e74c3c, #c0392b); box-shadow: 0 8px 25px rgba(231,76,60,0.4); }
+        
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            .header { flex-direction: column; gap: 15px; padding: 16px; }
+            .header h1 { font-size: 20px; }
+            .quick-actions { width: 100%; }
+            .quick-btn { flex: 1; justify-content: center; font-size: 13px; padding: 10px 12px; }
+            .user-area { width: 100%; justify-content: flex-end; }
+            .section h2 { font-size: 18px; }
+            .form-row { flex-direction: column; }
+            .form-actions { flex-direction: column; }
+            button[type="submit"] { width: 100%; }
+        }
     </style>
-    <script>window.PAGE_CSRF = '{$csrf_token|default=""}';</script>
 </head>
 <body>
-    <!-- 确认弹窗 -->
-    <div class="modal" id="confirmModal">
-        <div class="modal-content">
-            <p id="modalMessage">确定要删除吗？</p>
-            <div class="modal-buttons">
-                <button onclick="confirmDelete()">确定</button>
-                <button onclick="cancelDelete()">取消</button>
+    <div class="toast" id="toast"></div>
+
+    <div class="gift-modal" id="giftModal">
+        <div class="gift-modal-content">
+            <h3 style="text-align:center;margin-bottom:5px;">🎁 选择礼物</h3>
+            <div class="gift-grid" id="giftGrid"></div>
+            <div style="margin:12px 0;">
+                <input type="text" id="giftMessage" placeholder="发送祝福给TA..." style="width:100%;padding:12px;border:2px solid #eee;border-radius:8px;font-size:14px;">
+            </div>
+            <div style="display:flex;gap:12px;justify-content:center;">
+                <button onclick="closeGiftModal()" style="background:#f5f5f5;color:#555;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:14px;">取消</button>
+                <button onclick="confirmSendGift()" id="sendGiftBtn" style="background:#ccc;color:white;border:none;padding:12px 24px;border-radius:8px;cursor:not-allowed;font-size:14px;" disabled>确认送出</button>
             </div>
         </div>
     </div>
 
-    <!-- 头部区域 -->
     <div class="header">
-        <h1>🐶 铲屎官记录本{if condition="isset($can_moderate_all) && $can_moderate_all"} <span style="font-size:14px;color:#c0392b;">(管理)</span>{/if}</h1>
-        <div class="user-info">
-            <div class="user-avatar{if condition='isset($current_avatar) && $current_avatar'} has-photo{/if}" onclick="toggleUserDropdown()">
-                {if condition="isset($current_avatar) && $current_avatar"}
-                <img src="{$current_avatar}" alt="" width="40" height="40" loading="eager">
-                {else/}
-                {if condition="session('username')"}
-                {$Think.session.username|substr=0,1}
-                {else/}
-                登
-                {/if}
-                {/if}
+        <h1>🐾 铲屎官记录本</h1>
+        
+        <div class="header-center">
+            {if condition="session('user_id')"}
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="location.href='/pet/create'">
+                    � 记录宠物
+                </button>
+                <button class="quick-btn secondary" onclick="location.href='/post/create'">
+                    📮 发布帖子
+                </button>
             </div>
-            <div class="user-dropdown" id="userDropdown">
-                {if condition="session('user_id')"}
-                <a href="/profile">个人信息</a>
-                <a href="/pet_profile">我的宠物档案</a>
-                <a href="/achievement">等级成就</a>
-                <a href="/message">💬 消息中心</a>
-                <a href="/logout">退出登录</a>
-                {else}
-                <a href="/login">登录</a>
-                <a href="/register">注册</a>
-                {/if}
-            </div>
-        </div>
-    </div>
-    
-    <!-- 宠物记录表单区域 -->
-    <div class="section">
-        <h2>📝 记录宠物生活</h2>
-        {if condition="session('user_id')"}
-        <div class="form-box">
-            <form action="/pet/save" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="csrf_token" value="{$csrf_token|default=''}">
-                <input type="text" name="pet_name" placeholder="宠物名字（如：旺财）" required>
-                <textarea name="content" rows="4" placeholder="今天发生了什么？（如：今天拆家了...）" required></textarea>
-                <input type="file" name="image" accept="image/*" onchange="previewImage(this, 'petImagePreview')">
-                <img id="petImagePreview" class="image-preview" alt="图片预览">
-                <button type="submit">提交记录</button>
-            </form>
+            {/if}
         </div>
         
-        {else}
-        <p style="color: #999;">请先<a href="/login">登录</a>后记录宠物生活</p>
-        {/if}
-
-        <hr>
-
-        <!-- 宠物记录列表区域 -->
-        <div class="list-box" id="petLogList">
-            {volist name="logs" id="log"}
-            <div class="log-item" id="log-item-{$log.id}">
-                <div class="log-header">
-                    {if isset($users[$log.user_id]) && isset($users[$log.user_id]['avatar']) && $users[$log.user_id]['avatar']}
-                    <img src="{$users[$log.user_id]['avatar']}" alt="{$users[$log.user_id]['username']}" class="log-avatar" loading="lazy">
+        <div class="user-area">
+            {if condition="session('user_id')"}
+            <button class="message-btn" onclick="location.href='/message'" title="消息中心">
+                💬
+                <span class="message-badge" id="msgBadge" style="display:none;">0</span>
+            </button>
+            {/if}
+            
+            <div class="user-avatar-wrapper">
+                <div class="user-avatar{if condition='isset($current_avatar) && $current_avatar'} has-photo{/if}" onclick="toggleUserDropdown()">
+                    {if condition="isset($current_avatar) && $current_avatar"}
+                    <img src="{$current_avatar}" alt="" width="44" height="44">
+                    {else/}
+                    {if condition="session('username')"}
+                    {$Think.session.username|substr=0,1}
+                    {else/}
+                    登
+                    {/if}
+                    {/if}
+                </div>
+                <div class="user-dropdown" id="userDropdown">
+                    {if condition="session('user_id')"}
+                    <a href="/profile">👤 个人信息</a>
+                    <a href="/pet_profile">🐾 我的宠物档案</a>
+                    <a href="/achievement">🏆 等级成就</a>
+                    <a href="/logout">🚪 退出登录</a>
                     {else}
-                    <div class="log-avatar-placeholder">{if isset($users[$log.user_id])}{$users[$log.user_id]['username']|substr=0,1|strtoupper}{else}U{/if}</div>
-                    {/if}
-                    <div class="log-meta">
-                        <div class="log-pet-name">🐾 {$log.pet_name}</div>
-                        <div class="log-username">{if isset($users[$log.user_id])}{$users[$log.user_id]['username']}{else}未知用户{/if}</div>
-                    </div>
-                </div>
-                <p>{$log.content}</p>
-                {if isset($log['image']) && $log['image']}
-                <img src="{$log['image']}" class="post-image" alt="宠物图片">
-                {/if}
-                <div class="interaction-bar">
-                    <button class="interaction-btn" onclick="toggleLike('pet_log', {$log.id}, this)" data-liked="false">
-                        <span>❤️</span>
-                        <span class="count">0</span>
-                    </button>
-                </div>
-                <div class="log-footer">
-                    <div class="time">{$log.create_time}</div>
-                    {if condition="session('user_id') == $log.user_id || (isset($can_moderate_all) && $can_moderate_all)"}
-                    <button class="delete-btn" onclick="deletePetLogItem({$log.id})">删除</button>
+                    <a href="/login">🔑 登录</a>
+                    <a href="/register">📝 注册</a>
                     {/if}
                 </div>
             </div>
-            {/volist}
-            
-            <!-- 宠物记录分页 -->
-            {if isset($logs['total']) && $logs['total'] > 5}
-            <div class="pagination">
-                {if $logs['current_page'] > 1}
-                <a href="?log_page={$logs['current_page']-1}&post_page={$posts['current_page']}">上一页</a>
-                {else}
-                <span class="disabled">上一页</span>
-                {/if}
-                
-                {for start="1" end="$logs['last_page']"}
-                {if $i == $logs['current_page']}
-                <span class="active">{$i}</span>
-                {else}
-                <a href="?log_page={$i}&post_page={$posts['current_page']}">{$i}</a>
-                {/if}
-                {/for}
-                
-                {if $logs['current_page'] < $logs['last_page']}
-                <a href="?log_page={$logs['current_page']+1}&post_page={$posts['current_page']}">下一页</a>
-                {else}
-                <span class="disabled">下一页</span>
-                {/if}
-                
-                <span>共 {$logs['total']} 条记录</span>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="left-content">
+            {if condition="session('user_id')"}
+            {else/}
+            <div class="square-card" style="text-align:center;padding:40px;">
+                <div style="font-size:48px;margin-bottom:15px;">🐾</div>
+                <p style="color:#888;margin:0 0 20px;">登录后可记录宠物生活</p>
+                <a href="/login" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#ff9900,#ff6600);color:white;text-decoration:none;border-radius:25px;font-weight:600;">立即登录</a>
             </div>
             {/if}
-        </div>
-    </div>
-
-    <!-- 发表帖子区域 -->
-    <div class="section">
-        <h2>📝 发表帖子</h2>
-        {if condition="session('user_id')"}
-        <div class="form-box">
-            <form action="/post/save" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="csrf_token" value="{$csrf_token|default=''}">
-                <input type="text" name="title" placeholder="帖子标题" required>
-                <textarea name="content" rows="4" placeholder="帖子内容..." required></textarea>
-                <input type="file" name="image" accept="image/*" onchange="previewImage(this, 'postImagePreview')">
-                <img id="postImagePreview" class="image-preview" alt="图片预览">
-                <div class="upload-progress">
-                    <div class="upload-progress-bar" id="uploadProgressBar"></div>
+            <div class="section">
+                <div class="section-header">
+                    <h2>📢 社区帖子 <span class="section-badge">{$posts['total']|default='0'}</span></h2>
                 </div>
-                <button type="submit">发布帖子</button>
-            </form>
+                <div id="postList">
+                    {volist name="posts" id="post"}
+                    <div class="square-card">
+                        <div class="pet-record">
+                            {if isset($users[$post.user_id]) && isset($users[$post.user_id]['avatar']) && $users[$post.user_id]['avatar']}
+                            <img src="{$users[$post.user_id]['avatar']}" alt="{$users[$post.user_id]['username']}" class="pet-avatar-small">
+                            {else}
+                            <div class="pet-avatar-placeholder">{$users[$post.user_id]['username']|substr=0,1|strtoupper|default='U'}</div>
+                            {/if}
+                            <div class="pet-info">
+                                <div class="pet-name">
+                                    <span class="pet-name-icon">📮</span>
+                                    {$post.title}
+                                </div>
+                                <div class="pet-owner">{$users[$post.user_id]['username']|default='未知用户'} · {$post.created_at}</div>
+                                <div class="pet-content">{$post.content}</div>
+                                {if $post.image}
+                                <img src="{$post.image}" class="pet-image" alt="帖子图片">
+                                {/if}
+                                <div class="interaction-bar">
+                                    <button class="interaction-btn" onclick="toggleLike('post', {$post.id}, this)" data-liked="false">
+                                        <span>❤️</span>
+                                        <span class="count">0</span>
+                                    </button>
+                                    <button class="interaction-btn" onclick="toggleBookmark('post', {$post.id}, this)" data-bookmarked="false">
+                                        <span>⭐</span>
+                                    </button>
+                                    <button class="interaction-btn" onclick="openGiftModal({$post.user_id}, 'post', {$post.id})">
+                                        <span>🎁</span>
+                                    </button>
+                                    <button class="interaction-btn" onclick="location.href='/post/detail/{$post.id}'">
+                                        <span>💬</span> 查看详情
+                                    </button>
+                                    {if condition="session('user_id') == $post.user_id || (isset($can_moderate_all) && $can_moderate_all)"}
+                                    <button class="interaction-btn delete-btn" onclick="deletePost({$post.id})" style="margin-left:auto;">
+                                        🗑️ 删除
+                                    </button>
+                                    {/if}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {/volist}
+                </div>
+                
+                {if isset($posts['total']) && $posts['total'] > 5}
+                <div class="pagination">
+                    {if $posts['current_page'] > 1}
+                    <a href="?post_page={$posts['current_page']-1}&log_page={$logs['current_page']}">上一页</a>
+                    {else}
+                    <span class="disabled">上一页</span>
+                    {/if}
+                    <span class="active">{$posts['current_page']} / {$posts['last_page']}</span>
+                    {if $posts['current_page'] < $posts['last_page']}
+                    <a href="?post_page={$posts['current_page']+1}&log_page={$logs['current_page']}">下一页</a>
+                    {else}
+                    <span class="disabled">下一页</span>
+                    {/if}
+                    <span style="color:#999;font-size:13px;margin-left:8px;">共 {$posts['total']} 条</span>
+                </div>
+                {/if}
+            </div>
         </div>
-        {else}
-        <p style="color: #999;">请先<a href="/login">登录</a>后发表帖子</p>
-        {/if}
-    </div>
 
-    <!-- 帖子展示区域 -->
-    <div class="section">
-        <h2>📢 社区帖子</h2>
-        <div class="post-list" id="postList">
-            {volist name="posts" id="post"}
-            <div class="post-item">
-                <div class="post-header">
-                    <div class="post-author-info">
-                        {if isset($users[$post.user_id]) && isset($users[$post.user_id]['avatar']) && $users[$post.user_id]['avatar']}
-                        <img src="{$users[$post.user_id]['avatar']}" alt="{$users[$post.user_id]['username']}" class="post-avatar" loading="lazy">
+        <div class="right-sidebar">
+            <div class="section">
+                <div class="section-header">
+                    <h2>🐾 宠物生活 <span class="section-badge">{$logs['total']|default='0'}</span></h2>
+                </div>
+                {volist name="logs" id="log"}
+                <div class="square-card">
+                    <div class="pet-record">
+                        {if isset($users[$log.user_id]) && isset($users[$log.user_id]['avatar']) && $users[$log.user_id]['avatar']}
+                        <img src="{$users[$log.user_id]['avatar']}" alt="{$users[$log.user_id]['username']}" class="pet-avatar-small">
                         {else}
-                        <div class="post-avatar-placeholder">{if isset($users[$post.user_id])}{$users[$post.user_id]['username']|substr=0,1|strtoupper}{else}U{/if}</div>
+                        <div class="pet-avatar-placeholder">{$users[$log.user_id]['username']|substr=0,1|strtoupper|default='U'}</div>
                         {/if}
-                        <span class="post-author">{if isset($users[$post.user_id])}{$users[$post.user_id]['username']}{else}未知用户{/if}</span>
+                        <div class="pet-info">
+                            <div class="pet-name">
+                                <span class="pet-name-icon">🐾</span>
+                                {$log.pet_name}
+                            </div>
+                            <div class="pet-owner">{$users[$log.user_id]['username']|default='未知用户'} · {$log.create_time}</div>
+                            <div class="pet-content">{if isset($log.content) && strlen($log.content) > 50}{:substr($log.content, 0, 50)}...{else/}{$log.content}{/if}</div>
+                            {if isset($log['image']) && $log['image']}
+                            <img src="{$log['image']}" class="pet-image" alt="宠物图片" style="max-height:180px;">
+                            {/if}
+                            <div class="interaction-bar">
+                                <button class="interaction-btn" onclick="toggleLike('pet_log', {$log.id}, this)" data-liked="false">
+                                    <span>❤️</span>
+                                    <span class="count">0</span>
+                                </button>
+                                {if condition="session('user_id') == $log.user_id || (isset($can_moderate_all) && $can_moderate_all)"}
+                                <button class="interaction-btn delete-btn" onclick="deleteLog({$log.id})" style="margin-left:auto;">
+                                    🗑️
+                                </button>
+                                {/if}
+                            </div>
+                        </div>
                     </div>
-                    <span class="time">{$post.created_at}</span>
                 </div>
-                <div class="post-title">{$post.title}</div>
-                <div class="post-content">{$post.content}</div>
-                {if $post.image}
-                <img src="{$post.image}" class="post-image" alt="帖子图片">
-                {/if}
-                <div class="interaction-bar">
-                    <button class="interaction-btn" onclick="toggleLike('post', {$post.id}, this)" data-liked="false">
-                        <span>❤️</span>
-                        <span class="count">0</span>
-                    </button>
-                    <button class="interaction-btn" onclick="toggleBookmark('post', {$post.id}, this)" data-bookmarked="false">
-                        <span>⭐</span>
-                    </button>
-                    <button class="interaction-btn" onclick="openGiftModal({$post.user_id}, 'post', {$post.id})">
-                        <span>🎁</span>
-                    </button>
-                </div>
-                <div class="post-actions">
-                    <button onclick="viewPostDetail({$post.id})">查看详情</button>
-                    {if condition="session('user_id') == $post.user_id || (isset($can_moderate_all) && $can_moderate_all)"}
-                    <button class="delete-btn" onclick="showDeleteConfirm('post', {$post.id})">删除帖子</button>
+                {/volist}
+                
+                {if isset($logs['total']) && $logs['total'] > 5}
+                <div class="pagination">
+                    {if $logs['current_page'] > 1}
+                    <a href="?log_page={$logs['current_page']-1}&post_page={$posts['current_page']}">上一页</a>
+                    {else}
+                    <span class="disabled">上一页</span>
                     {/if}
+                    <span class="active">{$logs['current_page']} / {$logs['last_page']}</span>
+                    {if $logs['current_page'] < $logs['last_page']}
+                    <a href="?log_page={$logs['current_page']+1}&post_page={$posts['current_page']}">下一页</a>
+                    {else}
+                    <span class="disabled">下一页</span>
+                    {/if}
+                    <span style="color:#999;font-size:13px;margin-left:8px;">共 {$logs['total']} 条</span>
                 </div>
+                {/if}
             </div>
-            {/volist}
         </div>
-        
-        <!-- 帖子分页 -->
-        {if isset($posts['total']) && $posts['total'] > 5}
-        <div class="pagination">
-            {if $posts['current_page'] > 1}
-            <a href="?post_page={$posts['current_page']-1}&log_page={$logs['current_page']}">上一页</a>
-            {else}
-            <span class="disabled">上一页</span>
-            {/if}
-            
-            {for start="1" end="$posts['last_page']"}
-            {if $i == $posts['current_page']}
-            <span class="active">{$i}</span>
-            {else}
-            <a href="?post_page={$i}&log_page={$logs['current_page']}">{$i}</a>
-            {/if}
-            {/for}
-            
-            {if $posts['current_page'] < $posts['last_page']}
-            <a href="?post_page={$posts['current_page']+1}&log_page={$logs['current_page']}">下一页</a>
-            {else}
-            <span class="disabled">下一页</span>
-            {/if}
-            
-            <span>共 {$posts['total']} 条帖子</span>
-        </div>
-        {/if}
     </div>
 
     <script>
-        // 切换用户下拉菜单
+        var PAGE_CSRF = '{$csrf_token|default=""}';
+        var CURRENT_USER_ID = '{$Think.session.user_id|default=""}';
+
         function toggleUserDropdown() {
-            const dropdown = document.getElementById('userDropdown');
-            dropdown.classList.toggle('show');
+            document.getElementById('userDropdown').classList.toggle('show');
         }
-
-        // 点击其他地方关闭下拉菜单
-        document.addEventListener('click', function(event) {
-            const userInfo = document.querySelector('.user-info');
-            const dropdown = document.getElementById('userDropdown');
-            
-            if (event.target.tagName === 'A') {
-                dropdown.classList.remove('show');
-                return;
-            }
-
-            if (!userInfo.contains(event.target)) {
-                dropdown.classList.remove('show');
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.user-avatar') && !e.target.closest('.user-dropdown')) {
+                document.getElementById('userDropdown').classList.remove('show');
             }
         });
 
-        // 查看帖子详情
-        function viewPostDetail(postId) {
-            window.location.href = '/post/detail/' + postId;
-        }
-
-        // 图片预览
-        function previewImage(input, previewId) {
-            const preview = document.getElementById(previewId);
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.classList.add('show');
-                };
-                reader.readAsDataURL(input.files[0]);
-            } else {
-                preview.classList.remove('show');
-            }
-        }
-
-        // 删除相关变量
-        let deleteType = '';
-        let deleteId = 0;
-
-        // 显示删除确认弹窗
-        function showDeleteConfirm(type, id) {
-            deleteType = type;
-            deleteId = id;
-            const message = type === 'post' ? '确定要删除这篇帖子吗？' : '确定要删除这条评论吗？';
-            document.getElementById('modalMessage').textContent = message;
-            document.getElementById('confirmModal').classList.add('show');
-        }
-
-        // 确认删除
-        function confirmDelete() {
-            var tok = encodeURIComponent(window.PAGE_CSRF || '');
-            if (deleteType === 'post') {
-                window.location.href = '/post/delete/' + deleteId + '?csrf=' + tok;
-            } else if (deleteType === 'comment') {
-                window.location.href = '/comment/delete/' + deleteId + '?csrf=' + tok;
-            }
-            document.getElementById('confirmModal').classList.remove('show');
-        }
-
-        // 取消删除
-        function cancelDelete() {
-            document.getElementById('confirmModal').classList.remove('show');
-            deleteType = '';
-            deleteId = 0;
-        }
-
-        // 删除宠物记录项（带确认弹窗和局部更新）
-        function deletePetLogItem(logId) {
-            // 二次确认
-            if (!confirm('⚠️ 警告：删除后无法恢复！\n\n确定要删除这条宠物记录吗？')) {
-                return;
-            }
-            
-            // 获取记录项元素
-            const logItem = document.getElementById('log-item-' + logId);
-            if (!logItem) {
-                alert('记录不存在');
-                return;
-            }
-            
-            // 显示删除中状态
-            logItem.style.opacity = '0.5';
-            
-            // 发送DELETE请求
+        function deleteLog(logId) {
+            if (!confirm('确定要删除这条宠物记录吗？')) return;
             fetch('/pet/log/' + logId, {
                 method: 'DELETE',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/json',
-                    'X-Csrf-Token': window.PAGE_CSRF || ''
-                }
+                headers: {'X-Requested-With': 'XMLHttpRequest', 'X-Csrf-Token': PAGE_CSRF}
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('HTTP error! status: ' + response.status);
-                }
-                return response.json();
-            })
-            .then(data => {
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
                 if (data.code === 200) {
-                    // 删除成功，局部更新页面（移除该记录项）
-                    logItem.style.transition = 'all 0.3s ease';
-                    logItem.style.opacity = '0';
-                    logItem.style.transform = 'translateX(-100%)';
-                    
-                    setTimeout(() => {
-                        logItem.remove();
-                        
-                        // 检查是否还有记录
-                        const remainingItems = document.querySelectorAll('.log-item');
-                        if (remainingItems.length === 0) {
-                            // 如果没有记录了，显示空提示
-                            const listBox = document.getElementById('petLogList');
-                            listBox.innerHTML = '<div style="text-align: center; color: #999; padding: 30px;">暂无宠物记录，快来发布第一条吧！</div>';
-                        }
-                    }, 300);
-                    
-                    // 显示成功提示（可选）
-                    showToast(data.msg || '删除成功');
+                    showToast('删除成功');
+                    setTimeout(function() { location.reload(); }, 800);
                 } else {
-                    // 删除失败，恢复样式
-                    logItem.style.opacity = '1';
-                    alert(data.msg || '删除失败');
+                    showToast(data.msg || '删除失败', 'error');
                 }
             })
-            .catch(error => {
-                // 网络错误或其他异常
-                logItem.style.opacity = '1';
-                console.error('Error:', error);
-                alert('删除失败，请检查网络连接或稍后重试');
-            });
+            .catch(function() { showToast('网络错误', 'error'); });
         }
-        
-        // 显示提示消息
-        function showToast(message) {
-            // 创建提示元素
-            const toast = document.createElement('div');
-            toast.style.cssText = `
-                position: fixed;
-                top: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: #27ae60;
-                color: white;
-                padding: 12px 24px;
-                border-radius: 4px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-                z-index: 9999;
-                font-size: 14px;
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            `;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            
-            // 显示动画
-            setTimeout(() => {
-                toast.style.opacity = '1';
-            }, 10);
-            
-            // 自动隐藏
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                setTimeout(() => {
-                    toast.remove();
-                }, 300);
-            }, 2000);
+
+        function deletePost(postId) {
+            if (!confirm('确定要删除这篇帖子吗？')) return;
+            location.href = '/post/delete/' + postId + '?csrf=' + encodeURIComponent(PAGE_CSRF);
         }
-        
-        // 图片懒加载
-        function initLazyLoad() {
-            // 检查浏览器是否支持 IntersectionObserver
-            if ('IntersectionObserver' in window) {
-                const imageObserver = new IntersectionObserver((entries, observer) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            const img = entry.target;
-                            // 添加加载动画
-                            img.style.opacity = '0';
-                            img.style.transition = 'opacity 0.3s ease';
-                            
-                            // 加载图片
-                            const tempImg = new Image();
-                            tempImg.onload = function() {
-                                img.src = tempImg.src;
-                                img.style.opacity = '1';
-                            };
-                            tempImg.onerror = function() {
-                                // 加载失败时显示占位符
-                                img.style.display = 'none';
-                                const placeholder = img.nextElementSibling;
-                                if (placeholder && placeholder.classList.contains('log-avatar-placeholder')) {
-                                    placeholder.style.display = 'flex';
-                                }
-                            };
-                            tempImg.src = img.dataset.src || img.src;
-                            
-                            observer.unobserve(img);
-                        }
-                    });
-                }, {
-                    rootMargin: '50px 0px', // 提前50px开始加载
-                    threshold: 0.01
-                });
-                
-                // 观察所有需要懒加载的图片
-                document.querySelectorAll('img[loading="lazy"]').forEach(img => {
-                    imageObserver.observe(img);
-                });
-            } else {
-                // 浏览器不支持 IntersectionObserver，直接加载所有图片
-                document.querySelectorAll('img[loading="lazy"]').forEach(img => {
-                    img.style.opacity = '1';
-                });
-            }
-        }
-        
-        // 页面加载完成后初始化懒加载
-        document.addEventListener('DOMContentLoaded', initLazyLoad);
-        
-        // ========== 互动功能 ==========
-        
-        // 礼物弹窗状态
-        let giftToUserId = 0;
-        let giftTargetType = '';
-        let giftTargetId = 0;
-        let selectedGiftType = '';
-        
-        // 点赞/取消点赞
+
+        var giftToUserId = 0, giftTargetType = '', giftTargetId = 0, selectedGiftType = '';
+
         function toggleLike(targetType, targetId, btn) {
-            var userId = '{$Think.session.user_id|default=""}';
-            if (!userId) {
-                showToast('请先登录');
-                return;
-            }
-            
+            if (!CURRENT_USER_ID) { showToast('请先登录'); return; }
             fetch('/interaction/like_toggle', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 body: 'target_type=' + targetType + '&target_id=' + targetId
             })
-            .then(function(response) { return response.json(); })
+            .then(function(r) { return r.json(); })
             .then(function(data) {
                 if (data.code === 200) {
+                    btn.classList.toggle('active-like', data.liked);
+                    btn.dataset.liked = data.liked;
                     var countEl = btn.querySelector('.count');
-                    if (data.liked) {
-                        btn.classList.add('active-like');
-                        btn.dataset.liked = 'true';
-                    } else {
-                        btn.classList.remove('active-like');
-                        btn.dataset.liked = 'false';
-                    }
-                    if (countEl) {
-                        countEl.textContent = data.count;
-                    }
+                    if (countEl) countEl.textContent = data.count;
                 } else {
-                    showToast(data.msg || '操作失败');
+                    showToast(data.msg || '操作失败', 'error');
                 }
             })
-            .catch(function(error) {
-                console.error('Error:', error);
-                showToast('网络错误');
-            });
+            .catch(function() { showToast('网络错误', 'error'); });
         }
-        
-        // 收藏/取消收藏
+
         function toggleBookmark(targetType, targetId, btn) {
-            var userId = '{$Think.session.user_id|default=""}';
-            if (!userId) {
-                showToast('请先登录');
-                return;
-            }
-            
+            if (!CURRENT_USER_ID) { showToast('请先登录'); return; }
             fetch('/interaction/bookmark_toggle', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 body: 'target_type=' + targetType + '&target_id=' + targetId + '&folder=默认收藏'
             })
-            .then(function(response) { return response.json(); })
+            .then(function(r) { return r.json(); })
             .then(function(data) {
                 if (data.code === 200) {
-                    if (data.bookmarked) {
-                        btn.classList.add('active-bookmark');
-                        btn.dataset.bookmarked = 'true';
-                    } else {
-                        btn.classList.remove('active-bookmark');
-                        btn.dataset.bookmarked = 'false';
-                    }
+                    btn.classList.toggle('active-bookmark', data.bookmarked);
+                    btn.dataset.bookmarked = data.bookmarked;
                     showToast(data.msg);
                 } else {
-                    showToast(data.msg || '操作失败');
+                    showToast(data.msg || '操作失败', 'error');
                 }
             })
-            .catch(function(error) {
-                console.error('Error:', error);
-                showToast('网络错误');
-            });
+            .catch(function() { showToast('网络错误', 'error'); });
         }
-        
-        // 打开送礼弹窗
+
         function openGiftModal(toUserId, targetType, targetId) {
-            var userId = '{$Think.session.user_id|default=""}';
-            if (!userId) {
-                showToast('请先登录');
-                return;
-            }
-            
+            if (!CURRENT_USER_ID) { showToast('请先登录'); return; }
             giftToUserId = toUserId;
             giftTargetType = targetType;
             giftTargetId = targetId;
             selectedGiftType = '';
-            
             document.getElementById('sendGiftBtn').disabled = true;
             document.getElementById('giftMessage').value = '';
-            
             fetch('/interaction/gift_types')
-                .then(function(response) { return response.json(); })
+                .then(function(r) { return r.json(); })
                 .then(function(data) {
                     if (data.code === 200) {
                         var grid = document.getElementById('giftGrid');
@@ -658,89 +417,55 @@
                         data.data.forEach(function(gift) {
                             var div = document.createElement('div');
                             div.className = 'gift-option';
-                            div.onclick = function() { selectGift(gift.type); };
+                            div.onclick = function() {
+                                selectedGiftType = gift.type;
+                                document.querySelectorAll('.gift-option').forEach(function(el) { el.classList.remove('selected'); });
+                                div.classList.add('selected');
+                                document.getElementById('sendGiftBtn').disabled = false;
+                                document.getElementById('sendGiftBtn').style.background = 'linear-gradient(135deg, #ff9900, #ff6600)';
+                                document.getElementById('sendGiftBtn').style.cursor = 'pointer';
+                            };
                             div.innerHTML = '<div class="icon">' + gift.icon + '</div><div class="name">' + gift.name + '</div><div class="price">' + gift.price + ' 积分</div>';
                             grid.appendChild(div);
                         });
                         document.getElementById('giftModal').classList.add('show');
                     }
                 })
-                .catch(function(error) {
-                    console.error('Error:', error);
-                    showToast('加载礼物列表失败');
-                });
+                .catch(function() { showToast('加载礼物列表失败', 'error'); });
         }
-        
-        // 选择礼物
-        function selectGift(giftType) {
-            selectedGiftType = giftType;
-            document.querySelectorAll('.gift-option').forEach(function(el) {
-                el.classList.remove('selected');
-            });
-            event.currentTarget.classList.add('selected');
-            document.getElementById('sendGiftBtn').disabled = false;
-        }
-        
-        // 关闭送礼弹窗
+
         function closeGiftModal() {
             document.getElementById('giftModal').classList.remove('show');
         }
-        
-        // 确认送出礼物
+
         function confirmSendGift() {
-            if (!selectedGiftType) {
-                showToast('请选择一个礼物');
-                return;
-            }
-            
+            if (!selectedGiftType) { showToast('请选择礼物'); return; }
             var message = document.getElementById('giftMessage').value;
-            
             fetch('/interaction/send_gift', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 body: 'to_user_id=' + giftToUserId + '&gift_type=' + selectedGiftType + '&message=' + encodeURIComponent(message) + '&target_type=' + giftTargetType + '&target_id=' + giftTargetId
             })
-            .then(function(response) { return response.json(); })
+            .then(function(r) { return r.json(); })
             .then(function(data) {
                 if (data.code === 200) {
                     showToast('🎁 礼物已送出！');
                     closeGiftModal();
                 } else {
-                    showToast(data.msg || '送礼失败');
+                    showToast(data.msg || '送礼失败', 'error');
                 }
             })
-            .catch(function(error) {
-                console.error('Error:', error);
-                showToast('网络错误');
-            });
+            .catch(function() { showToast('网络错误', 'error'); });
         }
-        
-        // 覆盖 showToast，统一提示风格
-        var originalShowToast = window.showToast || function(msg) {
-            var toast = document.createElement('div');
-            toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#27ae60;color:white;padding:12px 24px;border-radius:4px;box-shadow:0 2px 10px rgba(0,0,0,0.2);z-index:9999;font-size:14px;opacity:0;transition:opacity 0.3s ease;';
-            toast.textContent = msg;
-            document.body.appendChild(toast);
-            setTimeout(function() { toast.style.opacity = '1'; }, 10);
-            setTimeout(function() { toast.style.opacity = '0'; setTimeout(function() { toast.remove(); }, 300); }, 2000);
-        };
-        window.showToast = originalShowToast;
-    </script>
 
-    <!-- 礼物弹窗 -->
-    <div class="gift-modal" id="giftModal">
-        <div class="gift-modal-content">
-            <h3 style="text-align:center;margin-bottom:15px;">🎁 选择礼物</h3>
-            <div class="gift-grid" id="giftGrid"></div>
-            <div style="margin:10px 0;">
-                <label style="font-weight:bold;">留言（可选）</label>
-                <input type="text" id="giftMessage" placeholder="发送祝福给TA..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-top:5px;">
-            </div>
-            <div style="display:flex;gap:10px;justify-content:center;">
-                <button onclick="closeGiftModal()" style="background:#f0f0f0;color:#333;border:none;padding:10px 25px;border-radius:6px;cursor:pointer;">取消</button>
-                <button onclick="confirmSendGift()" id="sendGiftBtn" style="background:#ff9900;color:white;border:none;padding:10px 25px;border-radius:6px;cursor:pointer;" disabled>确认送出</button>
-            </div>
-        </div>
-    </div>
+        function showToast(message, type) {
+            type = type || 'success';
+            var toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast' + (type === 'error' ? ' error' : '');
+            toast.classList.add('show');
+            setTimeout(function() { toast.classList.remove('show'); }, 2500);
+        }
+    </script>
 </body>
 </html>

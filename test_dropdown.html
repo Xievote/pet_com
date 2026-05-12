@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>下拉菜单测试</title>
+    <style>
+        .user-avatar-wrapper { position: relative; display: inline-block; }
+        .user-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #ff9900, #ff6600); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; flex-shrink: 0; font-size: 18px; font-weight: bold; transition: all 0.3s; box-shadow: 0 4px 12px rgba(255,153,0,0.3); }
+        .user-avatar:hover { transform: scale(1.05); }
+        
+        .user-dropdown { position: absolute; top: 100%; right: 0; background: white; border: 1px solid #eee; border-radius: 12px; padding: 10px 0; box-shadow: 0 8px 30px rgba(0,0,0,0.12); z-index: 100; display: none; min-width: 180px; margin-top: 8px; }
+        .user-dropdown.show { display: block; animation: dropdownFadeIn 0.3s ease; }
+        @keyframes dropdownFadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .user-dropdown a { display: flex; align-items: center; gap: 8px; padding: 12px 20px; text-decoration: none; color: #555; font-size: 14px; transition: background 0.2s; }
+        .user-dropdown a:hover { background: #fef9f3; color: #ff9900; }
+    </style>
+</head>
+<body>
+    <h1>下拉菜单功能测试</h1>
+    
+    <div class="user-avatar-wrapper">
+        <div class="user-avatar" onclick="toggleUserDropdown()">
+            U
+        </div>
+        <div class="user-dropdown" id="userDropdown">
+            <a href="/profile">👤 个人信息</a>
+            <a href="/pet_profile">🐾 我的宠物档案</a>
+            <a href="/achievement">🏆 等级成就</a>
+            <a href="/logout">🚪 退出登录</a>
+        </div>
+    </div>
+    
+    <script>
+        function toggleUserDropdown() {
+            document.getElementById('userDropdown').classList.toggle('show');
+            console.log('Toggle dropdown');
+        }
+        
+        document.addEventListener('click', function(e) {
+            console.log('Click detected on:', e.target);
+            console.log('Has user-avatar:', !!e.target.closest('.user-avatar'));
+            console.log('Has user-dropdown:', !!e.target.closest('.user-dropdown'));
+            
+            if (!e.target.closest('.user-avatar') && !e.target.closest('.user-dropdown')) {
+                document.getElementById('userDropdown').classList.remove('show');
+                console.log('Hide dropdown');
+            }
+        });
+    </script>
+    
+    <p>测试说明：</p>
+    <ul>
+        <li>点击橙色圆形区域（头像）应该显示下拉菜单</li>
+        <li>点击页面其他区域应该隐藏下拉菜单</li>
+        <li>打开浏览器开发者工具（F12）查看控制台日志</li>
+    </ul>
+</body>
+</html>

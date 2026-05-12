@@ -32,6 +32,7 @@ Route::get('pet_profile/get_ranking/:type', 'index/PetProfileController/getRanki
 Route::get('pet_profile/charm_details/:id', 'index/PetProfileController/getCharmDetails');
 
 // 宠物记录路由
+Route::get('pet/create', 'index/Pet/createLog');
 Route::post('pet/save', 'index/Pet/save');
 Route::delete('pet/log/:id', 'index/Pet/deleteLog');
 
