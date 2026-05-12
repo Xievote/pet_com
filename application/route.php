@@ -62,3 +62,15 @@ Route::post('achievement/checkin', 'index/AchievementController/checkin');
 Route::get('achievement/level_info', 'index/AchievementController/getLevelInfo');
 Route::get('achievement/list', 'index/AchievementController/getAchievements');
 Route::post('achievement/check', 'index/AchievementController/checkAchievements');
+
+// 消息中心路由
+Route::get('message', 'index/MessageController/index');
+Route::get('message/notifications', 'index/MessageController/getNotifications');
+Route::get('message/unread_count', 'index/MessageController/getUnreadCount');
+Route::post('message/mark_read', 'index/MessageController/markRead');
+Route::post('message/mark_all_read', 'index/MessageController/markAllRead');
+Route::get('message/list', 'index/MessageController/getMessages');
+Route::get('message/conversation', 'index/MessageController/getConversation');
+Route::post('message/send', 'index/MessageController/sendMessage');
+Route::get('message/unread_message_count', 'index/MessageController/getUnreadMessageCount');
+Route::post('message/mark_message_read', 'index/MessageController/markMessageRead');

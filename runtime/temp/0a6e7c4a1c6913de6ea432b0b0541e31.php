@@ -1,4 +1,4 @@
-<?php if (!defined('THINK_PATH')) exit(); /*a:1:{s:64:"C:\Users\EDY\tp5\public/../application/index\view\pet\index.html";i:1778489021;}*/ ?>
+<?php if (!defined('THINK_PATH')) exit(); /*a:1:{s:64:"C:\Users\EDY\tp5\public/../application/index\view\pet\index.html";i:1778553401;}*/ ?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -137,6 +137,7 @@
                 <a href="/profile">个人信息</a>
                 <a href="/pet_profile">我的宠物档案</a>
                 <a href="/achievement">等级成就</a>
+                <a href="/message">💬 消息中心</a>
                 <a href="/logout">退出登录</a>
                 <?php else: ?>
                 <a href="/login">登录</a>
@@ -208,7 +209,7 @@
                 <a href="?log_page=<?php echo $logs['current_page']-1; ?>&post_page=<?php echo $posts['current_page']; ?>">上一页</a>
                 <?php else: ?>
                 <span class="disabled">上一页</span>
-                <?php endif; $__FOR_START_2145441103__=1;$__FOR_END_2145441103__=$logs['last_page'];for($i=$__FOR_START_2145441103__;$i < $__FOR_END_2145441103__;$i+=1){ if($i == $logs['current_page']): ?>
+                <?php endif; $__FOR_START_1758065871__=1;$__FOR_END_1758065871__=$logs['last_page'];for($i=$__FOR_START_1758065871__;$i < $__FOR_END_1758065871__;$i+=1){ if($i == $logs['current_page']): ?>
                 <span class="active"><?php echo $i; ?></span>
                 <?php else: ?>
                 <a href="?log_page=<?php echo $i; ?>&post_page=<?php echo $posts['current_page']; ?>"><?php echo $i; ?></a>
@@ -297,7 +298,7 @@
             <a href="?post_page=<?php echo $posts['current_page']-1; ?>&log_page=<?php echo $logs['current_page']; ?>">上一页</a>
             <?php else: ?>
             <span class="disabled">上一页</span>
-            <?php endif; $__FOR_START_158064534__=1;$__FOR_END_158064534__=$posts['last_page'];for($i=$__FOR_START_158064534__;$i < $__FOR_END_158064534__;$i+=1){ if($i == $posts['current_page']): ?>
+            <?php endif; $__FOR_START_1886224878__=1;$__FOR_END_1886224878__=$posts['last_page'];for($i=$__FOR_START_1886224878__;$i < $__FOR_END_1886224878__;$i+=1){ if($i == $posts['current_page']): ?>
             <span class="active"><?php echo $i; ?></span>
             <?php else: ?>
             <a href="?post_page=<?php echo $i; ?>&log_page=<?php echo $logs['current_page']; ?>"><?php echo $i; ?></a>

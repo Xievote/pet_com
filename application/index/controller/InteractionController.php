@@ -9,6 +9,7 @@ use app\index\model\Gift;
 use app\index\model\User;
 use app\index\model\PetLog;
 use app\index\model\Post;
+use app\index\model\Notification;
 use app\index\service\UserService;
 
 class InteractionController extends Controller
@@ -62,6 +63,13 @@ class InteractionController extends Controller
                 }
                 if ($ownerId && (int)$ownerId !== (int)$userId) {
                     UserService::awardExp($ownerId, 'receive_like');
+
+                    $fromUser = User::find($userId);
+                    $fromUsername = $fromUser ? $fromUser->username : '某用户';
+                    $typeLabel = $targetType === 'post' ? '你的帖子' : ($targetType === 'pet_log' ? '你的宠物记录' : '你的评论');
+                    $content = '❤️ ' . $fromUsername . ' 赞了' . $typeLabel;
+
+                    self::addNotification($ownerId, 'like', $userId, $targetType, $targetId, $content);
                 }
 
                 $count = Like::where(['target_type' => $targetType, 'target_id' => $targetId])->count();
@@ -116,6 +124,11 @@ class InteractionController extends Controller
                     $post = Post::field('user_id')->find($targetId);
                     if ($post && (int)$post->user_id !== (int)$userId) {
                         UserService::checkAchievements($post->user_id);
+
+                        $fromUser = User::find($userId);
+                        $fromUsername = $fromUser ? $fromUser->username : '某用户';
+                        $content = '⭐ ' . $fromUsername . ' 收藏了你的帖子';
+                        self::addNotification($post->user_id, 'bookmark', $userId, 'post', $targetId, $content);
                     }
                 }
 
@@ -202,6 +215,13 @@ class InteractionController extends Controller
             $gift->message = $message;
             $gift->save();
 
+            $fromUser = User::find($userId);
+            $fromUsername = $fromUser ? $fromUser->username : '某用户';
+            $giftNames = ['bone' => '小骨头', 'fish' => '小鱼干', 'heart' => '爱心', 'rose' => '玫瑰花'];
+            $giftName = $giftNames[$giftType] ?? '礼物';
+            $content = '🎁 ' . $fromUsername . ' 送了你一个' . $giftName;
+            self::addNotification($toUserId, 'gift', $userId, null, null, $content);
+
             return json(['code' => 200, 'msg' => '礼物已送出！', 'data' => $gift]);
         } catch (\Exception $e) {
             return json(['code' => 500, 'msg' => '送礼失败：' . $e->getMessage()]);
@@ -250,5 +270,26 @@ class InteractionController extends Controller
         ];
 
         return json(['code' => 200, 'data' => $types]);
+    }
+
+    /**
+     * 添加通知
+     */
+    private static function addNotification($userId, $type, $fromUserId, $targetType, $targetId, $content)
+    {
+        try {
+            $notification = new Notification();
+            $notification->user_id = $userId;
+            $notification->type = $type;
+            $notification->from_user_id = $fromUserId;
+            $notification->target_type = $targetType;
+            $notification->target_id = $targetId;
+            $notification->content = $content;
+            $notification->is_read = 0;
+            $notification->save();
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 }
